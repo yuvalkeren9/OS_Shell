@@ -92,29 +92,84 @@ SmallShell::~SmallShell() {
 */
 Command * SmallShell::CreateCommand(const char* cmd_line) {
 	// For example:
-/*
+
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
 
-  if (firstWord.compare("pwd") == 0) {
-    return new GetCurrDirCommand(cmd_line);
-  }
-  else if (firstWord.compare("showpid") == 0) {
+//  if (firstWord.compare("pwd") == 0) {
+//    return new GetCurrDirCommand(cmd_line);
+//  }
+  if (firstWord.compare("showpid") == 0) {
     return new ShowPidCommand(cmd_line);
   }
-  else if ...
-  .....
-  else {
-    return new ExternalCommand(cmd_line);
+  else if(firstWord.compare("pwd") == 0){
+      return new GetCurrDirCommand(cmd_line);
   }
-  */
+//  else if ...
+//  .....
+//  else {
+//    return new ExternalCommand(cmd_line);
+//  }
+
   return nullptr;
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
-  // TODO: Add your implementation here
-  // for example:
-  // Command* cmd = CreateCommand(cmd_line);
-  // cmd->execute();
+   Command* cmd = CreateCommand(cmd_line);
+
+   //if command doesn't exist
+   //TODO: I think they actualy wanted us to put sometihng real here. This is temporary.
+   if (cmd == nullptr){
+       printf("I don't know this command my good friend. Perhaps you are mistaken?\n");
+       return;
+   }
+   cmd->execute();
+   delete cmd;
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
+
+
+
+
+
+
+//This is where our code begins!
+
+//Command Thing
+Command::Command(const char *cmd_line) {
+
+}
+
+
+//builtInCommnd
+BuiltInCommand::BuiltInCommand(const char *cmd_line) : Command(cmd_line) {
+
+}
+
+
+
+/** showpid command    */
+
+ShowPidCommand::ShowPidCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
+
+}
+
+
+void ShowPidCommand::execute() {
+    printf("smash pid is %d\n",getpid());
+}
+
+
+/** pwd command      */
+
+
+GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
+
+}
+
+void GetCurrDirCommand::execute() {
+
+    std::cout << getcwd(nullptr, 100) << "\n";
+
+}
+
