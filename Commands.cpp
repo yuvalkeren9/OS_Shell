@@ -80,8 +80,9 @@ void _removeBackgroundSign(char* cmd_line) {
 
 // TODO: Add your implementation for classes in Commands.h 
 
-SmallShell::SmallShell() {
+SmallShell::SmallShell()  {
     previousPath = nullptr;
+    shellPromt = "smash> ";
 }
 
 SmallShell::~SmallShell() {
@@ -115,6 +116,10 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if(firstWord.compare("cd") == 0){
       return new ChangeDirCommand(cmd_line, arguments, previousPath);
   }
+  else if(firstWord.compare("chprompt") == 0){
+      return new ChPromtCommand(cmd_line, shellPromt);
+
+  }
   else {
       return new ExternalCommand(cmd_line);
   }
@@ -144,6 +149,10 @@ void SmallShell::executeCommand(const char *cmd_line) {
 
 char *SmallShell::getPreviousPath() {
     return previousPath;
+}
+
+std::string SmallShell::getPromt() const {
+    return shellPromt;
 }
 
 
@@ -191,3 +200,4 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
 }
+

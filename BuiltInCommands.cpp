@@ -63,3 +63,26 @@ void ChangeDirCommand::execute() {
 
 }
 
+
+
+
+/** change promt command */
+ChPromtCommand::ChPromtCommand(const char *cmd_line, std::string& prompt) : BuiltInCommand(cmd_line), prompt(prompt) {
+
+}
+
+void ChPromtCommand::execute() {
+
+    char* arguments[COMMAND_MAX_ARGS];
+    _parseCommandLine(cmd_line, arguments);
+
+    if (arguments[1] == NULL){
+        prompt = "smash> ";
+    }
+    else{
+        prompt = string(arguments[1]) + "> ";
+
+    }
+}
+
+

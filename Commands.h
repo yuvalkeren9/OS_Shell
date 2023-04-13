@@ -86,6 +86,15 @@ class GetCurrDirCommand : public BuiltInCommand {
   void execute() override;
 };
 
+class ChPromtCommand : public BuiltInCommand {
+private:
+    std::string& prompt;
+public:
+    ChPromtCommand(const char* cmd_line, std::string& prompt);
+    virtual ~ChPromtCommand() {}
+    void execute() override;
+};
+
 class ShowPidCommand : public BuiltInCommand {
  public:
   ShowPidCommand(const char* cmd_line);
@@ -191,6 +200,7 @@ class KillCommand : public BuiltInCommand {
 class SmallShell {
  private:
     char* previousPath;
+    std::string shellPromt;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -206,6 +216,8 @@ class SmallShell {
   void executeCommand(const char* cmd_line);
   char* getPreviousPath();
   void updatePreviousPath(char* path);
+  std::string getPromt() const;
+
 };
 
 
