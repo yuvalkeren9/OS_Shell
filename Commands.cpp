@@ -95,6 +95,8 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+  char* arguments[30];
+  int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
 //  if (firstWord.compare("pwd") == 0) {
 //    return new GetCurrDirCommand(cmd_line);
@@ -104,6 +106,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   }
   else if(firstWord.compare("pwd") == 0){
       return new GetCurrDirCommand(cmd_line);
+  }
+  else if(firstWord.compare("cd") == 0){
+      return new ChangeDirCommand(cmd_line, arguments);
   }
 //  else if ...
 //  .....
@@ -172,4 +177,5 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(nullptr, 100) << "\n";
 
 }
+
 
