@@ -1,3 +1,4 @@
+
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
@@ -99,7 +100,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  char *arguments[30];
+  char *arguments[COMMAND_MAX_ARGS];
   int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
 //  if (firstWord.compare("pwd") == 0) {
@@ -186,35 +187,7 @@ GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line) : BuiltInCommand(cmd_
 }
 
 void GetCurrDirCommand::execute() {
-    char buffer[1000];
-    std::cout << getcwd(buffer, 1000);
+    char buffer[COMMAND_ARGS_MAX_LENGTH];
+    std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
-}
-
-
-//TODO: move to a real file
-ExternalCommand::ExternalCommand(const char *cmd_line) : Command(cmd_line) {
-
-}
-
-void ExternalCommand::execute() {
-
-    char *arguments[30];
-    int numberOfWords = _parseCommandLine(cmd_line, arguments);
-    char** function_args = new char*[numberOfWords];
-    for(int i=0; i< numberOfWords - 1; ++i){
-        function_args[i] = arguments[i+1];
-    }
-
-
-    pid_t pid = fork();
-    if (pid == 0){ //child
-        execv(arguments[0],function_args);
-    }
-    else if( pid == -1){   //error
-        //TODO: throw error
-    }
-    else{
-        waitpid(pid, nullptr, 0);
-    }
 }

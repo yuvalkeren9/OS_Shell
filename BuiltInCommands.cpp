@@ -14,7 +14,6 @@
 using std::string;
 using std::cout;
 
-std::string _trimBuiltInCommand(const std::string& s);
 
 
 
@@ -30,9 +29,9 @@ void ChangeDirCommand::execute() {
         std::cout << "My good friend, too many arguments. fuck off. \n";
         return;
     }
-    char buffer[1000];
+    char buffer[COMMAND_ARGS_MAX_LENGTH];
     string first_arg = plastPwd[1];
-    first_arg = _trimBuiltInCommand(first_arg);
+    first_arg = _trim(first_arg);
     first_arg = first_arg.substr(0, first_arg.find_first_of(" \n"));
     if(first_arg == "-"){
         if(previous == nullptr)
@@ -43,7 +42,7 @@ void ChangeDirCommand::execute() {
         }
         else{
             chdir(previous);
-            char* temp = getcwd(NULL, 1000);
+            char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
             delete previous;
             previous = temp;
         }
@@ -51,7 +50,7 @@ void ChangeDirCommand::execute() {
 
     else {
         if (chdir(first_arg.c_str()) == 0) {
-            char* temp = getcwd(NULL, 1000);
+            char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
             delete previous;
             previous = temp;
         }
@@ -64,23 +63,3 @@ void ChangeDirCommand::execute() {
 
 }
 
-
-//garbage programming
-
-
-std::string _ltrimBuiltInCommand(const std::string& s)
-{
-    size_t start = s.find_first_not_of(WHITESPACE);
-    return (start == std::string::npos) ? "" : s.substr(start);
-}
-
-std::string _rtrimBuiltInCommand(const std::string& s)
-{
-    size_t end = s.find_last_not_of(WHITESPACE);
-    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
-}
-
-std::string _trimBuiltInCommand(const std::string& s)
-{
-    return _rtrimBuiltInCommand(_ltrimBuiltInCommand(s));
-}
