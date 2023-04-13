@@ -2,13 +2,19 @@
 #define SMASH_COMMAND_H_
 
 #include <vector>
+//#include <string.h>
+
+const std::string WHITESPACE = " \n\r\t\f\v";
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
 class Command {
-// TODO: Add your data members
- public:
+
+
+protected:
+    const char* cmd_line;
+public:
   Command(const char* cmd_line);
   virtual ~Command() {};
   virtual void execute() = 0;
@@ -51,11 +57,14 @@ class RedirectionCommand : public Command {
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members public:
 public:
-    ChangeDirCommand(const char *cmd_line, char **plastPwd);
-    virtual ~ChangeDirCommand() {}
+    ChangeDirCommand(const char *cmd_line, char **plastPwd, char*& previous);
+    virtual ~ChangeDirCommand() {
+        delete previous;
+    }
     void execute() override;
 private:
     char **plastPwd;
+    char*& previous;
 };
 
 class GetCurrDirCommand : public BuiltInCommand {
@@ -169,7 +178,7 @@ class KillCommand : public BuiltInCommand {
 
 class SmallShell {
  private:
-  // TODO: Add your data members
+    char* previousPath;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -183,7 +192,12 @@ class SmallShell {
   }
   ~SmallShell();
   void executeCommand(const char* cmd_line);
-  // TODO: add extra methods as needed
+  char* getPreviousPath();
+  void updatePreviousPath(char* path);
 };
+
+
+//garbage
+
 
 #endif //SMASH_COMMAND_H_

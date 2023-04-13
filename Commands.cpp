@@ -9,7 +9,6 @@
 
 using namespace std;
 
-const std::string WHITESPACE = " \n\r\t\f\v";
 
 #if 0
 #define FUNC_ENTRY()  \
@@ -22,21 +21,22 @@ const std::string WHITESPACE = " \n\r\t\f\v";
 #define FUNC_EXIT()
 #endif
 
-string _ltrim(const std::string& s)
+
+std::string _ltrim(const std::string& s)
 {
-  size_t start = s.find_first_not_of(WHITESPACE);
-  return (start == std::string::npos) ? "" : s.substr(start);
+    size_t start = s.find_first_not_of(WHITESPACE);
+    return (start == std::string::npos) ? "" : s.substr(start);
 }
 
-string _rtrim(const std::string& s)
+std::string _rtrim(const std::string& s)
 {
-  size_t end = s.find_last_not_of(WHITESPACE);
-  return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
 
-string _trim(const std::string& s)
+std::string _trim(const std::string& s)
 {
-  return _rtrim(_ltrim(s));
+    return _rtrim(_ltrim(s));
 }
 
 int _parseCommandLine(const char* cmd_line, char** args) {
@@ -80,22 +80,26 @@ void _removeBackgroundSign(char* cmd_line) {
 // TODO: Add your implementation for classes in Commands.h 
 
 SmallShell::SmallShell() {
-// TODO: add your implementation
+    previousPath = nullptr;
 }
 
 SmallShell::~SmallShell() {
 // TODO: add your implementation
 }
 
+
+void SmallShell::updatePreviousPath(char *path) {
+    previousPath = path;
+}
+
 /**
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
 */
 Command * SmallShell::CreateCommand(const char* cmd_line) {
-	// For example:
 
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  char* arguments[30];
+  char *arguments[30];
   int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
 //  if (firstWord.compare("pwd") == 0) {
@@ -108,7 +112,10 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
       return new GetCurrDirCommand(cmd_line);
   }
   else if(firstWord.compare("cd") == 0){
-      return new ChangeDirCommand(cmd_line, arguments);
+      return new ChangeDirCommand(cmd_line, arguments, previousPath);
+  }
+  else {
+      return new ExternalCommand(cmd_line);
   }
 //  else if ...
 //  .....
@@ -122,6 +129,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 void SmallShell::executeCommand(const char *cmd_line) {
    Command* cmd = CreateCommand(cmd_line);
 
+
    //if command doesn't exist
    //TODO: I think they actualy wanted us to put sometihng real here. This is temporary.
    if (cmd == nullptr){
@@ -133,6 +141,11 @@ void SmallShell::executeCommand(const char *cmd_line) {
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 
+char *SmallShell::getPreviousPath() {
+    return previousPath;
+}
+
+
 
 
 
@@ -141,7 +154,7 @@ void SmallShell::executeCommand(const char *cmd_line) {
 //This is where our code begins!
 
 //Command Thing
-Command::Command(const char *cmd_line) {
+Command::Command(const char *cmd_line) : cmd_line(cmd_line) {
 
 }
 
@@ -173,9 +186,35 @@ GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line) : BuiltInCommand(cmd_
 }
 
 void GetCurrDirCommand::execute() {
-
-    std::cout << getcwd(nullptr, 100) << "\n";
-
+    char buffer[1000];
+    std::cout << getcwd(buffer, 1000);
+    std::cout << "\n";
 }
 
 
+//TODO: move to a real file
+ExternalCommand::ExternalCommand(const char *cmd_line) : Command(cmd_line) {
+
+}
+
+void ExternalCommand::execute() {
+
+    char *arguments[30];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+    char** function_args = new char*[numberOfWords];
+    for(int i=0; i< numberOfWords - 1; ++i){
+        function_args[i] = arguments[i+1];
+    }
+
+
+    pid_t pid = fork();
+    if (pid == 0){ //child
+        execv(arguments[0],function_args);
+    }
+    else if( pid == -1){   //error
+        //TODO: throw error
+    }
+    else{
+        waitpid(pid, nullptr, 0);
+    }
+}
