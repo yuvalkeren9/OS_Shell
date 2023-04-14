@@ -3,6 +3,7 @@
 
 #include <vector>
 //#include <string.h>
+#include <time.h>
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -15,9 +16,7 @@ std::string _trim(const std::string& s);
 int _parseCommandLine(const char* cmd_line, char** args);
 bool _isBackgroundComamnd(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
-
-
-
+char** makeArgsArr(const char *cmd_line, char* first_word);
 
 
 
@@ -113,9 +112,19 @@ public:
 
 
 class JobsList {
+
  public:
   class JobEntry {
    // TODO: Add your data members
+  private:
+   int jobID;
+   pid_t pid;
+   const Command& command;
+   time_t time;
+   bool stopped;
+
+  public:
+      JobEntry(const Command& , bool stopped, int jobID);
   };
  // TODO: Add your data members
  public:
@@ -129,6 +138,10 @@ class JobsList {
   void removeJobById(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
+
+ private:
+    std::vector<JobEntry>  jobsVector ;
+    int numOfJobs;
   // TODO: Add extra methods or modify exisitng ones as needed
 };
 
@@ -201,6 +214,7 @@ class SmallShell {
  private:
     char* previousPath;
     std::string shellPromt;
+    JobsList jobList;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);

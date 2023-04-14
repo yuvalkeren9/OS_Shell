@@ -78,6 +78,21 @@ void _removeBackgroundSign(char* cmd_line) {
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
+char** makeArgsArr(const char *cmd_line , char* first_word){
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+    int length =  (strlen(arguments[0]));
+    char * temp = new char[length];
+    memcpy(temp,arguments[0],length);
+    char** function_args = new char*[numberOfWords];
+    first_word=temp;
+    for(int i=0; i< numberOfWords - 1; ++i){
+        function_args[i] = arguments[i+1];
+    }
+    return function_args;
+}
+
+
 // TODO: Add your implementation for classes in Commands.h 
 
 SmallShell::SmallShell()  {
@@ -88,7 +103,6 @@ SmallShell::SmallShell()  {
 SmallShell::~SmallShell() {
 // TODO: add your implementation
 }
-
 
 void SmallShell::updatePreviousPath(char *path) {
     previousPath = path;
@@ -200,4 +214,6 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
 }
+
+
 

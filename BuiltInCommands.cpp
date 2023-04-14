@@ -10,6 +10,9 @@
 #include <sys/wait.h>
 #include <iomanip>
 #include "Commands.h"
+#include <stdio.h>
+#include <errno.h>
+
 
 using std::string;
 using std::cout;
@@ -26,7 +29,8 @@ void ChangeDirCommand::execute() {
 //    string first_arg = _trim(string(cmd_line));
 //    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     if(plastPwd[2] != NULL){
-        std::cout << "My good friend, too many arguments. fuck off. \n";
+      //  std::cout << "My good friend, too many arguments. fuck off. \n";
+        perror("smash error: fork failed");
         return;
     }
     char buffer[COMMAND_ARGS_MAX_LENGTH];
@@ -36,7 +40,8 @@ void ChangeDirCommand::execute() {
     if(first_arg == "-"){
         if(previous == nullptr)
         {
-            std::cout << "smash error: cd: OLDPWD not set\n";
+          //  std::cout << "smash error: cd: OLDPWD not set\n";
+            perror("smash error: cd: OLDPWD not set");
             //TODO: error handling something
             return;
         }
