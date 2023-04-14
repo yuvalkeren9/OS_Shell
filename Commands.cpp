@@ -60,6 +60,14 @@ bool _isBackgroundComamnd(const char* cmd_line) {
   return str[str.find_last_not_of(WHITESPACE)] == '&';
 }
 
+bool isSpecialExternalCommand(const char* cmd_line){
+    const string str(cmd_line);
+    bool questionMark = str.find_first_of('?') != string::npos;
+    bool starMark = str.find_first_of('*') != string::npos;
+    return (questionMark || starMark);
+}
+
+
 void _removeBackgroundSign(char* cmd_line) {
   const string str(cmd_line);
   // find last character other than spaces

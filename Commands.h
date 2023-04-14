@@ -15,6 +15,7 @@ std::string _rtrim(const std::string& s);
 std::string _trim(const std::string& s);
 int _parseCommandLine(const char* cmd_line, char** args);
 bool _isBackgroundComamnd(const char* cmd_line);
+bool isSpecialExternalCommand(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
 char** makeArgsArr(const char *cmd_line, char* first_word);
 
@@ -214,7 +215,7 @@ class SmallShell {
  private:
     char* previousPath;
     std::string shellPromt;
-    JobsList jobList;
+//    JobsList jobList;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);

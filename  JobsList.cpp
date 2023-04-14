@@ -21,4 +21,3 @@ stopped(stopped), jobID(jobID)
     time_t* temp_time =new time_t;
     time =time::time(temp_time);
 }
-JobsList();
