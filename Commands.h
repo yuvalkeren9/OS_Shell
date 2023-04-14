@@ -120,11 +120,13 @@ class JobsList {
    int jobID;
    pid_t pid;
    const Command& command;
-   time_t time;
+   time_t* jobTime;
    bool stopped;
 
   public:
-      JobEntry(const Command& , bool stopped, int jobID);
+      JobEntry(int jobID, pid_t pid, const Command& command , bool stopped);
+      ~JobEntry();
+      void printJob();
   };
  // TODO: Add your data members
  public:
