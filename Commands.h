@@ -125,7 +125,7 @@ class JobsList {
    bool stopped;
 
   public:
-      JobEntry(int jobID, pid_t pid, const Command& command , bool stopped);
+      JobEntry(int jobID, pid_t pid, const ExternalCommand& command , bool stopped);
       ~JobEntry();
       void printJob();
       int getJobID() const;
