@@ -120,8 +120,7 @@ void SmallShell::updatePreviousPath(char *path) {
 /**
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
 */
-Command * SmallShell::CreateCommand(const char* cmd_line) {
-
+Command * SmallShell::CreateCommand(const char* cmd_line,JobsList* jobslist) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
   char *arguments[COMMAND_MAX_ARGS];
@@ -141,7 +140,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   }
   else if(firstWord.compare("chprompt") == 0){
       return new ChPromtCommand(cmd_line, shellPromt);
-
+  }
+  else if(firstWord.compare("jobs") == 0){
+      return new JobsCommand(cmd_line,jobslist);
   }
   else {
       return new ExternalCommand(cmd_line);
@@ -156,7 +157,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
-   Command* cmd = CreateCommand(cmd_line);
+   Command* cmd = CreateCommand(cmd_line, &(this->jobList));
     bool isBackground = _isBackgroundComamnd(cmd_line);
     if(isBackground){
         // assertion that if runs in background than it is an external command
@@ -234,6 +235,4 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
 }
-
-
 

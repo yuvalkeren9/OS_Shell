@@ -80,6 +80,7 @@ void ExternalCommand::execute() {
     else {                                                          //parnet
         if (isBackground){
             //don't wait
+            cout << "I am in the background!\n";
         }
         else {
             waitpid(pid, nullptr, 0);
