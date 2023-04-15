@@ -120,7 +120,7 @@ class JobsList {
   private:
    int jobID;
    pid_t pid;
-   const Command& command;
+   const ExternalCommand& command;
    time_t* jobTime;
    bool stopped;
 
