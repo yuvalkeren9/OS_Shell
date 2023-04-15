@@ -29,6 +29,7 @@ public:
   Command(const char* cmd_line);
   virtual ~Command() {};
   virtual void execute() = 0;
+  const char* getCommand() const;
   //virtual void prepare();
   //virtual void cleanup();
   // TODO: Add your extra methods if needed
@@ -112,7 +113,6 @@ public:
 
 
 class JobsList {
-
  public:
   class JobEntry {
    // TODO: Add your data members
@@ -127,12 +127,14 @@ class JobsList {
       JobEntry(int jobID, pid_t pid, const Command& command , bool stopped);
       ~JobEntry();
       void printJob();
+      int getJobID() const;
+
   };
  // TODO: Add your data members
  public:
   JobsList();
   ~JobsList();
-  void addJob(Command* cmd, bool isStopped = false);
+  void addJob(Command* cmd,pid_t pid,  bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -140,9 +142,10 @@ class JobsList {
   void removeJobById(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
+  int getLargestJobID();
 
  private:
-    std::vector<JobEntry>  jobsVector ;
+    std::vector<JobEntry*>  jobsVector ;
     int numOfJobs;
   // TODO: Add extra methods or modify exisitng ones as needed
 };

@@ -182,6 +182,10 @@ Command::Command(const char *cmd_line) : cmd_line(cmd_line) {
 
 }
 
+const char *Command::getCommand() const {
+    return cmd_line;
+}
+
 
 //builtInCommnd
 BuiltInCommand::BuiltInCommand(const char *cmd_line) : Command(cmd_line) {
@@ -214,6 +218,5 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
 }
-
 
 
