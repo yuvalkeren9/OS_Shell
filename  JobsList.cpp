@@ -26,7 +26,7 @@ JobsList::JobEntry::~JobEntry(){
 }
 
 void JobsList::JobEntry::printJob(){
-    string cmd_s = _trim(string(command.cmd_line));
+      string cmd_s = _trim(string(command.getCommand()));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     cout<< "[" << jobID << "] "<< firstWord << " "<< pid << " "<< jobTime;
     if(stopped)
@@ -35,4 +35,27 @@ void JobsList::JobEntry::printJob(){
     }
     cout << endl;
 
+}
+ int JobsList::JobEntry::getJobID() const {
+    return jobID;
+}
+
+JobsList::JobsList():numOfJobs(0) {
+}
+
+void JobsList::addJob(Command *cmd,pid_t pid, bool isStopped) {
+    int newJobID = getLargestJobID()+1;
+   const char* newCommand = cmd->getCommand();
+    JobEntry* newJob = new JobEntry(newJobID,pid,newCommand,isStopped);
+
+}
+
+int JobsList::getLargestJobID() {
+    int max =0;
+    for(const JobEntry *job:jobsVector){
+        if(job->getJobID()> max)
+        {
+            max=job->getJobID();
+        }
+    }
 }
