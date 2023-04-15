@@ -18,11 +18,12 @@ using namespace std;
 JobsList::JobEntry::JobEntry(int jobID, pid_t pid, const ExternalCommand& command , bool stopped): jobID(jobID), pid(pid), command(command),
 stopped(stopped)
         {
-//    time_t* temptime = new time_t;
-//    jobTime = time(temptime);
-    time(jobTime);
+    time_t* temptime = new ::time_t ;
+    time(temptime);
+    jobTime=temptime;
 }
 JobsList::JobEntry::~JobEntry(){
+    delete jobTime;
 }
 
 void JobsList::JobEntry::printJob(){
@@ -40,14 +41,15 @@ void JobsList::JobEntry::printJob(){
     return jobID;
 }
 
-JobsList::JobsList():numOfJobs(0) {
+JobsList::JobsList():numOfJobs(0){
 }
 
 void JobsList::addJob(ExternalCommand *cmd,pid_t pid, bool isStopped) {
     int newJobID = getLargestJobID()+1;
    const char* newCommand = cmd->getCommand();
     JobEntry* newJob = new JobEntry(newJobID,pid,newCommand,isStopped);
-
+    numOfJobs++;
+    jobsVector.push_back(newJob);
 }
 
 int JobsList::getLargestJobID() {

@@ -28,23 +28,28 @@ void ExternalCommand::execute() {
 
     if (isBackground){
         _removeBackgroundSign(cmd_line_edit);
+
     }
 
     int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
-    char **function_args = new char *[numberOfWords];
-    for (int i = 0; i < numberOfWords - 1; ++i) {
-        function_args[i] = arguments[i + 1];
-    }
-    if (numberOfWords == 0) {
-        function_args = NULL;
-    }
+//    char **function_args = new char *[numberOfWords];
+//    for (int i = 0; i < numberOfWords - 1; ++i) {
+//        function_args[i] = arguments[i + 1];
+//    }
+//    if (numberOfWords == 0) {
+//        function_args = NULL;
+//    }
 
     pid_t pid = fork();
     if (pid == 0) {                                                         //child
         setpgrp();
+        cout << "!!!!";
         if (!isSpecialCommand){
-            if (execvp(arguments[0],arguments)==-1)
+            if (execv(arguments[0],arguments)==-1)//changed here execvp to execv because execvp cant run a.out (as requested) only ./a.out
             {
+//                cout << "first arg = "<< arguments[0] << endl;
+//                cout << "second arg = "<< arguments[1] << endl;
+//                cout << "third arg = "<< arguments[2] << endl;
                 perror("smash error: execv failed");
             }
         }

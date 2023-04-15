@@ -134,7 +134,7 @@ class JobsList {
  // TODO: Add your data members
  public:
   JobsList();
-  ~JobsList();
+  ~JobsList()= default;
   void addJob(ExternalCommand* cmd,pid_t pid,  bool isStopped = false);
   void printJobsList();
   void killAllJobs();
@@ -146,8 +146,8 @@ class JobsList {
   int getLargestJobID();
 
  private:
-    std::vector<JobEntry*>  jobsVector ;
     int numOfJobs;
+    std::vector<JobEntry*>  jobsVector ;
   // TODO: Add extra methods or modify exisitng ones as needed
 };
 
@@ -220,7 +220,7 @@ class SmallShell {
  private:
     char* previousPath;
     std::string shellPromt;
-//    JobsList jobList;
+    JobsList jobList;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
