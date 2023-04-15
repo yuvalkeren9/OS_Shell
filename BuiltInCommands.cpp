@@ -90,4 +90,13 @@ void ChPromtCommand::execute() {
     }
 }
 
+/** jobs  command */
+JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs){
+}
+
+void JobsCommand::execute() {
+jobs->printJobsList();
+}
+
+
 

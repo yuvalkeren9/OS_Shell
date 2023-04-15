@@ -45,11 +45,16 @@ void ExternalCommand::execute() {
         setpgrp();
         cout << "!!!!";
         if (!isSpecialCommand){
-            if (execv(arguments[0],arguments)==-1)//changed here execvp to execv because execvp cant run a.out (as requested) only ./a.out
+            if (execvp(arguments[0],arguments)==-1)//changed here execvp to execv because execvp cant run a.out (as requested) only ./a.out
             {
-//                cout << "first arg = "<< arguments[0] << endl;
-//                cout << "second arg = "<< arguments[1] << endl;
-//                cout << "third arg = "<< arguments[2] << endl;
+                cout << "first arg = "<< arguments[0] << endl;
+                cout << "second arg = "<< arguments[1] << endl;
+                cout << "third arg = "<< arguments[2] << endl;
+                if(arguments[3]== nullptr)
+                    cout << "forth arg = null"<< arguments[2] << endl;
+ //               cout << "forth arg = "<< arguments[4] << endl;
+//                cout << "fifth arg = "<< arguments[5] << endl;
+               // fprintf(stderr,"execvp() failed");
                 perror("smash error: execv failed");
             }
         }

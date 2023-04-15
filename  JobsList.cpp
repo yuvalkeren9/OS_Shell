@@ -26,7 +26,7 @@ JobsList::JobEntry::~JobEntry(){
     delete jobTime;
 }
 
-void JobsList::JobEntry::printJob(){
+void JobsList::JobEntry::printJob() const{
       string cmd_s = _trim(string(command.getCommand()));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     cout<< "[" << jobID << "] "<< firstWord << " "<< pid << " "<< jobTime;
@@ -59,5 +59,11 @@ int JobsList::getLargestJobID() {
         {
             max=job->getJobID();
         }
+    }
+}
+
+void JobsList::printJobsList() {
+    for(const JobEntry *job:jobsVector) {
+        job->printJob();
     }
 }
