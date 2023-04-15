@@ -20,7 +20,5 @@ void alarmHandler(int sig_num) {
 }
 
 void sigChildHandler(int sig_num){
-    cout << "did wait for child! The zombie is dead.." << endl;
     wait(nullptr);
 }
-

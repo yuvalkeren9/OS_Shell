@@ -37,7 +37,7 @@ void ChangeDirCommand::execute() {
     string first_arg = plastPwd[1];
     first_arg = _trim(first_arg);
     first_arg = first_arg.substr(0, first_arg.find_first_of(" \n"));
-    if(first_arg == "-"){
+    if(first_arg == "-"){                                                   //special - flag
         if(previous == nullptr)
         {
           //  std::cout << "smash error: cd: OLDPWD not set\n";
@@ -53,7 +53,7 @@ void ChangeDirCommand::execute() {
         }
     }
 
-    else {
+    else {                                                          //regular or ..
         if (chdir(first_arg.c_str()) == 0) {
             char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
             delete previous;

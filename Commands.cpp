@@ -103,7 +103,7 @@ char** makeArgsArr(const char *cmd_line , char* first_word){
 
 // TODO: Add your implementation for classes in Commands.h 
 
-SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash>"){
+SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash> "){
 //    previousPath = nullptr;
 //    shellPromt = "smash> ";
 //    jobList =  JobsList();
@@ -182,6 +182,8 @@ char *SmallShell::getPreviousPath() {
 std::string SmallShell::getPromt() const {
     return shellPromt;
 }
+
+
 
 
 

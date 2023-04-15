@@ -72,7 +72,7 @@ class ChangeDirCommand : public BuiltInCommand {
 public:
     ChangeDirCommand(const char *cmd_line, char **plastPwd, char*& previous);
     virtual ~ChangeDirCommand() {
-        delete previous;
+//        delete previous;
     }
     void execute() override;
 private:

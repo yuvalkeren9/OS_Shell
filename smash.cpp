@@ -5,10 +5,12 @@
 #include "Commands.h"
 #include "signals.h"
 
+using std::endl;
+using std::cout;
+
 int main(int argc, char* argv[]) {
     if(signal(SIGTSTP , ctrlZHandler)==SIG_ERR) {
         perror("smash error: failed to set ctrl-Z handler");
-        printf("Meow the cat said");
     }
     if(signal(SIGINT , ctrlCHandler)==SIG_ERR) {
         perror("smash error: failed to set ctrl-C handler");
@@ -27,4 +29,8 @@ int main(int argc, char* argv[]) {
         smash.executeCommand(cmd_line.c_str());
     }
     return 0;
+//    std::cout << "started sleeping" << endl;
+//    sleep(5);
+//    cout << "stopped sleeping, exiting" << endl;
+
 }
