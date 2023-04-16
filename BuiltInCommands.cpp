@@ -98,7 +98,7 @@ JobsCommand::JobsCommand(const char *cmd_line): BuiltInCommand(cmd_line){
 
 void JobsCommand::execute() {
 SmallShell &smash = SmallShell::getInstance();
-smash.getJoblist().printJobsList();
+smash.getJoblist()->printJobsList();
 }
 
 

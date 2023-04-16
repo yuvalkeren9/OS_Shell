@@ -30,7 +30,6 @@ void ExternalCommand::execute() {
 
     if (isBackground){
         _removeBackgroundSign(cmd_line_edit);
-
     }
 
     int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
@@ -80,12 +79,8 @@ void ExternalCommand::execute() {
 
     else {                                                          //parnet
         if (isBackground){
-            //don't wait
-            // assertion that if runs in background than it is an external command
-           // pid_t pid =getpid();
-            //smashy.jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
-            smashy.getJoblist().addJob(this,pid,false);
-            //     cout<< "job added to the joblist"<< endl;
+            smashy.getJoblist()->addJob(cmd_line,pid,false);
+            cout <<cmd_line;
             cout << "I am in the background!\n";
         }
         else {
