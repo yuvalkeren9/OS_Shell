@@ -120,12 +120,12 @@ class JobsList {
   private:
    int jobID;
    pid_t pid;
-   const ExternalCommand& command;
+   ExternalCommand* command;
    time_t* jobTime;
    bool stopped;
 
   public:
-      JobEntry(int jobID, pid_t pid, const ExternalCommand& command , bool stopped);
+      JobEntry(int jobID, pid_t pid, ExternalCommand* command , bool stopped);
       ~JobEntry();
       void printJob() const;
       int getJobID() const;
@@ -153,10 +153,8 @@ class JobsList {
 
 class JobsCommand : public BuiltInCommand {
  // TODO: Add your data members
-private:
- JobsList* jobs;
  public:
-  JobsCommand(const char* cmd_line, JobsList* jobs);
+  JobsCommand(const char* cmd_line);
   virtual ~JobsCommand() {}
   void execute() override;
 };
@@ -226,7 +224,7 @@ class SmallShell {
     pid_t foregroundCommandPID;
   SmallShell();
  public:
-  Command *CreateCommand(const char* cmd_line, JobsList* jobslist);
+  Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator
   static SmallShell& getInstance() // make SmallShell singleton
@@ -239,6 +237,7 @@ class SmallShell {
   void executeCommand(const char* cmd_line);
   char* getPreviousPath();
   void updatePreviousPath(char* path);
+  JobsList& getJoblist();
   std::string getPromt() const;
   void updateForegroundCommandPID(pid_t pid);
   pid_t getForegroundCommandPID() const;

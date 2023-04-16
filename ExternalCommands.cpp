@@ -47,7 +47,7 @@ void ExternalCommand::execute() {
         setpgrp();
         if (!isSpecialCommand){
             if (execv(arguments[0], arguments) == -1){
-                if (execvp(arguments[0],arguments)==-1)//changed here execvp to execv because execvp cant run a.out (as requested) only ./a.out
+                if (execvp(arguments[0],arguments)==-1)
                 {
 //                cout << "first arg = "<< arguments[0] << endl;
 //                cout << "second arg = "<< arguments[1] << endl;
@@ -81,6 +81,11 @@ void ExternalCommand::execute() {
     else {                                                          //parnet
         if (isBackground){
             //don't wait
+            // assertion that if runs in background than it is an external command
+           // pid_t pid =getpid();
+            //smashy.jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
+            smashy.getJoblist().addJob(this,pid,false);
+            //     cout<< "job added to the joblist"<< endl;
             cout << "I am in the background!\n";
         }
         else {

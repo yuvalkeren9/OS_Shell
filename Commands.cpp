@@ -120,7 +120,7 @@ void SmallShell::updatePreviousPath(char *path) {
 /**
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
 */
-Command * SmallShell::CreateCommand(const char* cmd_line,JobsList* jobslist) {
+Command * SmallShell::CreateCommand(const char* cmd_line) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
   char *arguments[COMMAND_MAX_ARGS];
@@ -142,7 +142,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line,JobsList* jobslist) {
       return new ChPromtCommand(cmd_line, shellPromt);
   }
   else if(firstWord.compare("jobs") == 0){
-      return new JobsCommand(cmd_line,jobslist);
+      return new JobsCommand(cmd_line);
   }
   else {
       return new ExternalCommand(cmd_line);
@@ -157,13 +157,12 @@ Command * SmallShell::CreateCommand(const char* cmd_line,JobsList* jobslist) {
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
-   Command* cmd = CreateCommand(cmd_line, &(this->jobList));
+   Command* cmd = CreateCommand(cmd_line);
     bool isBackground = _isBackgroundComamnd(cmd_line);
     if(isBackground){
-        // assertion that if runs in background than it is an external command
         pid_t pid =getpid();
         this->jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
-        cout<< "job added to the joblist"<< endl;
+   //     cout<< "job added to the joblist"<< endl;
     }
    //if command doesn't exist
    //TODO: I think they actualy wanted us to put sometihng real here. This is temporary.
@@ -191,6 +190,10 @@ void SmallShell::updateForegroundCommandPID(pid_t pid) {
 pid_t SmallShell::getForegroundCommandPID() const{
     return foregroundCommandPID;
 }
+JobsList &SmallShell::getJoblist() {
+    return jobList;
+}
+
 
 
 
