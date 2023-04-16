@@ -91,11 +91,12 @@ void ChPromtCommand::execute() {
 }
 
 /** jobs  command */
-JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs){
+JobsCommand::JobsCommand(const char *cmd_line): BuiltInCommand(cmd_line){
 }
 
 void JobsCommand::execute() {
-jobs->printJobsList();
+SmallShell &smash = SmallShell::getInstance();
+smash.getJoblist().printJobsList();
 }
 
 
