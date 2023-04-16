@@ -43,6 +43,10 @@ void JobsList::JobEntry::printJob() const{
     return jobID;
 }
 
+pid_t JobsList::JobEntry::getJobPID() const {
+    return pid;
+}
+
 JobsList::JobsList():numOfJobs(0){
 }
 
@@ -59,13 +63,27 @@ int JobsList::getLargestJobID() {
     for(const JobEntry *job:jobsVector){
         if(job->getJobID()> max)
         {
-            max=job->getJobID();
+            max = job->getJobID();
         }
     }
+    return max;
 }
 
 void JobsList::printJobsList() {
     for(const JobEntry *job:jobsVector) {
         job->printJob();
     }
+}
+
+JobsList::JobEntry *JobsList::getJobById(int jobId) {
+    for(JobEntry* jobEntry : jobsVector){
+        if (jobEntry->getJobID() == jobId){
+            return jobEntry;
+        }
+    }
+    return nullptr;   //if was not found
+}
+
+bool JobsList::isEmpty() const {
+    return jobsVector.empty();
 }

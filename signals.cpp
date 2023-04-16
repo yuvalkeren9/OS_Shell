@@ -10,8 +10,13 @@ using namespace std;
 void ctrlZHandler(int sig_num) {
     auto& smashy = SmallShell::getInstance();
     pid_t foregroundChildPID = smashy.getForegroundCommandPID();
+    if (foregroundChildPID == 0){
+        cout << "No child to stop.. moron" << endl;
+        return;
+    }
     cout <<"Stopping the child!" << endl;
     kill(foregroundChildPID, SIGSTOP);
+    smashy.getJoblist()->addJob(smashy.getExternalCommandInFgPointer(), foregroundChildPID, true);
 }
 
 void ctrlCHandler(int sig_num) {
@@ -28,5 +33,12 @@ void alarmHandler(int sig_num) {
 }
 
 void sigChildHandler(int sig_num){
-    wait(nullptr);
+    auto& smashy = SmallShell::getInstance();
+    cout << "a child has sent SIGCHLD" <<endl;
+    if (smashy.getForegroundCommandPID() != 0){
+        return;
+    }
+    else{
+        wait(nullptr);
+    }
 }

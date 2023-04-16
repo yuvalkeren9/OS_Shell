@@ -17,7 +17,12 @@ int _parseCommandLine(const char* cmd_line, char** args);
 bool _isBackgroundComamnd(const char* cmd_line);
 bool isSpecialExternalCommand(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
-char** makeArgsArr(const char *cmd_line, char* first_word);
+char** makeArgsArr(const char *cmd_line);
+
+char* removeMinusFromStartOfString(char *str);
+int convertStringToInt(char* str);
+int removeMinusFromStringAndReturnAsInt(char* str);
+
 
 
 
@@ -129,6 +134,7 @@ class JobsList {
       ~JobEntry();
       void printJob() const;
       int getJobID() const;
+      pid_t getJobPID() const;
 
   };
  // TODO: Add your data members
@@ -144,6 +150,7 @@ class JobsList {
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
   int getLargestJobID();
+  bool isEmpty() const;
 
  private:
     int numOfJobs;
@@ -160,7 +167,10 @@ class JobsCommand : public BuiltInCommand {
 };
 
 class ForegroundCommand : public BuiltInCommand {
- // TODO: Add your data members
+    int jobId;
+    JobsList* jobsList;
+    static const  int badArgumentsError = -1;
+    static const int emptyListError = -2;
  public:
   ForegroundCommand(const char* cmd_line, JobsList* jobs);
   virtual ~ForegroundCommand() {}
@@ -209,11 +219,13 @@ class SetcoreCommand : public BuiltInCommand {
 };
 
 class KillCommand : public BuiltInCommand {
- // TODO: Add your data members
+    JobsList* jobsList;
  public:
   KillCommand(const char* cmd_line, JobsList* jobs);
   virtual ~KillCommand() {}
   void execute() override;
+
+    static int removeMinusFromStartOfString(char *string);
 };
 
 class SmallShell {
@@ -222,6 +234,7 @@ class SmallShell {
     std::string shellPromt;
     JobsList jobList;
     pid_t foregroundCommandPID;
+    ExternalCommand* externalCommandInFgPointer;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -237,10 +250,13 @@ class SmallShell {
   void executeCommand(const char* cmd_line);
   char* getPreviousPath();
   void updatePreviousPath(char* path);
-  JobsList& getJoblist();
+  JobsList* getJoblist();
   std::string getPromt() const;
   void updateForegroundCommandPID(pid_t pid);
   pid_t getForegroundCommandPID() const;
+
+  ExternalCommand* getExternalCommandInFgPointer() const;
+  void setExternalCommandInFgPointer(ExternalCommand* ptr);
 
 };
 

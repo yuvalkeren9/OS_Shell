@@ -84,13 +84,14 @@ void ExternalCommand::execute() {
             // assertion that if runs in background than it is an external command
            // pid_t pid =getpid();
             //smashy.jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
-            smashy.getJoblist().addJob(this,pid,false);
+            smashy.getJoblist()->addJob(this,pid,false);
             //     cout<< "job added to the joblist"<< endl;
             cout << "I am in the background!\n";
         }
         else {
+            smashy.setExternalCommandInFgPointer(this);
             smashy.updateForegroundCommandPID(pid);
-            waitpid(pid, nullptr, 0);
+            waitpid(pid, nullptr, WUNTRACED);
             smashy.updateForegroundCommandPID(0);
         }
     }

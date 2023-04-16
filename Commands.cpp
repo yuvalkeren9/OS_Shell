@@ -86,14 +86,10 @@ void _removeBackgroundSign(char* cmd_line) {
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-char** makeArgsArr(const char *cmd_line , char* first_word){
+char** makeArgsArr(const char *cmd_line){
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
-    int length =  (strlen(arguments[0]));
-    char * temp = new char[length];
-    memcpy(temp,arguments[0],length);
     char** function_args = new char*[numberOfWords];
-    first_word=temp;
     for(int i=0; i< numberOfWords - 1; ++i){
         function_args[i] = arguments[i+1];
     }
@@ -103,7 +99,7 @@ char** makeArgsArr(const char *cmd_line , char* first_word){
 
 // TODO: Add your implementation for classes in Commands.h 
 
-SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash> "), foregroundCommandPID(0){
+SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash> "), foregroundCommandPID(0), externalCommandInFgPointer(nullptr){
 //    previousPath = nullptr;
 //    shellPromt = "smash> ";
 //    jobList =  JobsList();
@@ -144,6 +140,12 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if(firstWord.compare("jobs") == 0){
       return new JobsCommand(cmd_line);
   }
+  else if(firstWord.compare("fg") == 0){
+      return new ForegroundCommand(cmd_line, &jobList );
+  }
+  else if (firstWord.compare("kill") == 0){
+      return new KillCommand(cmd_line, &jobList);
+  }
   else {
       return new ExternalCommand(cmd_line);
   }
@@ -159,11 +161,11 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 void SmallShell::executeCommand(const char *cmd_line) {
    Command* cmd = CreateCommand(cmd_line);
     bool isBackground = _isBackgroundComamnd(cmd_line);
-    if(isBackground){
-        pid_t pid =getpid();
-        this->jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
-   //     cout<< "job added to the joblist"<< endl;
-    }
+//    if(isBackground){
+//        pid_t pid =getpid();
+//        this->jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
+//   //     cout<< "job added to the joblist"<< endl;
+//    }
    //if command doesn't exist
    //TODO: I think they actualy wanted us to put sometihng real here. This is temporary.
    if (cmd == nullptr){
@@ -190,8 +192,16 @@ void SmallShell::updateForegroundCommandPID(pid_t pid) {
 pid_t SmallShell::getForegroundCommandPID() const{
     return foregroundCommandPID;
 }
-JobsList &SmallShell::getJoblist() {
-    return jobList;
+JobsList * SmallShell::getJoblist() {
+    return &jobList;
+}
+
+ExternalCommand *SmallShell::getExternalCommandInFgPointer() const {
+    return externalCommandInFgPointer;
+}
+
+void SmallShell::setExternalCommandInFgPointer(ExternalCommand *ptr) {
+    externalCommandInFgPointer = ptr;
 }
 
 
@@ -245,4 +255,49 @@ void GetCurrDirCommand::execute() {
     std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
     std::cout << "\n";
 }
+
+/**
+ * function recieves a char* that starts with - and removes it. Allocates memory for the new string.
+ * @param str
+ * @return
+ */
+char* removeMinusFromStartOfString(char *str) {
+    int len = strlen(str);
+    if (len == 0 || str[0] != '-') {
+        // Input string is empty or does not start with a dash
+        return NULL;
+    }
+    // Copy the characters after the first dash to a new string
+    char *result = new char[len];
+    strncpy(result, str + 1, len - 1);
+    result[len - 1] = '\0';
+    return result;
+}
+
+
+
+int convertStringToInt(char* str){
+    int temp;
+    try{
+        temp = stoi(string(str));
+    }
+    catch(std::exception& e){
+        cout << "something bad has happened my friend" << endl; //TODO: something real
+        return -1;
+    }
+    return temp;
+}
+
+
+int removeMinusFromStringAndReturnAsInt(char* str){
+    char* temp = removeMinusFromStartOfString(str);
+    if (temp == NULL){
+        return -1;
+    }
+    else{
+        int num = convertStringToInt(temp);
+        return num;
+    }
+}
+
 
