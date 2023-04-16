@@ -223,6 +223,7 @@ class SmallShell {
     char* previousPath;
     std::string shellPromt;
     JobsList jobList;
+    pid_t foregroundCommandPID;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line, JobsList* jobslist);
@@ -239,6 +240,8 @@ class SmallShell {
   char* getPreviousPath();
   void updatePreviousPath(char* path);
   std::string getPromt() const;
+  void updateForegroundCommandPID(pid_t pid);
+  pid_t getForegroundCommandPID() const;
 
 };
 

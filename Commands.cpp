@@ -103,7 +103,7 @@ char** makeArgsArr(const char *cmd_line , char* first_word){
 
 // TODO: Add your implementation for classes in Commands.h 
 
-SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash> "){
+SmallShell::SmallShell():previousPath(nullptr) , shellPromt("smash> "), foregroundCommandPID(0){
 //    previousPath = nullptr;
 //    shellPromt = "smash> ";
 //    jobList =  JobsList();
@@ -184,6 +184,13 @@ std::string SmallShell::getPromt() const {
     return shellPromt;
 }
 
+void SmallShell::updateForegroundCommandPID(pid_t pid) {
+    foregroundCommandPID = pid;
+}
+
+pid_t SmallShell::getForegroundCommandPID() const{
+    return foregroundCommandPID;
+}
 
 
 

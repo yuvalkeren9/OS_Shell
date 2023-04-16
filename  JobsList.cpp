@@ -27,7 +27,7 @@ JobsList::JobEntry::~JobEntry(){
 }
 
 void JobsList::JobEntry::printJob() const{
-      string cmd_s = _trim(string(command.getCommand()));
+    string cmd_s = _trim(string(command.getCommand()));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     cout<< "[" << jobID << "] "<< firstWord << " "<< pid << " "<< jobTime;
     if(stopped)

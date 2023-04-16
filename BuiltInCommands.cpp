@@ -30,7 +30,7 @@ void ChangeDirCommand::execute() {
 //    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     if(plastPwd[2] != NULL){
       //  std::cout << "My good friend, too many arguments. fuck off. \n";
-        perror("smash error: fork failed");
+        cout << "smash error: too many arguments" << std::endl;
         return;
     }
     char buffer[COMMAND_ARGS_MAX_LENGTH];
@@ -41,31 +41,33 @@ void ChangeDirCommand::execute() {
         if(previous == nullptr)
         {
           //  std::cout << "smash error: cd: OLDPWD not set\n";
-            perror("smash error: cd: OLDPWD not set");
-            //TODO: error handling something
+            cout << "smash error: cd: OLDPWD not set" <<std::endl;
             return;
         }
         else{
-            chdir(previous);
             char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
-            delete previous;
-            previous = temp;
+            if(chdir(previous) == 0){
+                delete previous;
+                previous = temp;
+            }
+            else{
+                perror("smash error: cd failed");
+            }
+
         }
     }
 
-    else {                                                          //regular or ..
+    else {                                                                        //regular or ..
+        char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
         if (chdir(first_arg.c_str()) == 0) {
-            char* temp = getcwd(NULL, COMMAND_ARGS_MAX_LENGTH);
             delete previous;
             previous = temp;
         }
         else {
-            std::cout <<"you mistaken my friend. maybe not real directory? maybe no privlage? \n";
-            //TODO: some kind error (perror thing)
+            perror("smash error: cd failed");
+            delete temp;
         }
     }
-
-
 }
 
 

@@ -20,6 +20,7 @@ ExternalCommand::ExternalCommand(const char *cmd_line) : Command(cmd_line) {
 
 void ExternalCommand::execute() {
 
+    auto& smashy = SmallShell::getInstance();
     char *arguments[COMMAND_MAX_ARGS];
     bool isBackground = _isBackgroundComamnd(cmd_line);
     bool isSpecialCommand = isSpecialExternalCommand(cmd_line);
@@ -83,7 +84,9 @@ void ExternalCommand::execute() {
             cout << "I am in the background!\n";
         }
         else {
+            smashy.updateForegroundCommandPID(pid);
             waitpid(pid, nullptr, 0);
+            smashy.updateForegroundCommandPID(0);
         }
     }
 }
