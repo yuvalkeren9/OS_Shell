@@ -159,6 +159,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
+    auto& smashy = SmallShell::getInstance();
+    smashy.reap();
+
    Command* cmd = CreateCommand(cmd_line);
     bool isBackground = _isBackgroundComamnd(cmd_line);
 //    if(isBackground){
@@ -202,6 +205,22 @@ ExternalCommand *SmallShell::getExternalCommandInFgPointer() const {
 
 void SmallShell::setExternalCommandInFgPointer(ExternalCommand *ptr) {
     externalCommandInFgPointer = ptr;
+}
+
+void SmallShell::reap() {
+    while (true){
+        pid_t pid = waitpid(-1, nullptr, WNOHANG);
+        if (pid == 0){
+            cout << "no childs to kill" << endl;
+            return;
+        }
+        auto jobToRemove = jobList.getJobByPID(pid);
+        if(jobToRemove == nullptr){
+            return;
+        }
+        cout << "I removed job " << jobToRemove->getJobID() << endl;
+        jobList.removeJobById(jobToRemove->getJobID());
+    }
 }
 
 

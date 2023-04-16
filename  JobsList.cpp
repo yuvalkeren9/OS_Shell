@@ -90,9 +90,21 @@ JobsList::JobEntry *JobsList::getJobById(int jobId) {
     return nullptr;   //if was not found
 }
 
+
+JobsList::JobEntry *JobsList::getJobByPID(pid_t jobPID) const {
+    for(JobEntry* jobEntry : jobsVector){
+        if (jobPID == jobEntry->getJobPID()){
+            return jobEntry;
+        }
+    }
+    return nullptr;   //if was not found
+}
+
 bool JobsList::isEmpty() const {
     return jobsVector.empty();
 }
+
+
 
 void JobsList::removeJobById(int jobId) {
     int i=0;

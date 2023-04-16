@@ -153,6 +153,7 @@ class JobsList {
   JobEntry *getLastStoppedJob(int *jobId);
   int getLargestJobID();
   bool isEmpty() const;
+  JobsList::JobEntry* getJobByPID(pid_t jobPID) const;
 
  private:
     int numOfJobs;
@@ -260,6 +261,7 @@ class SmallShell {
   ExternalCommand* getExternalCommandInFgPointer() const;
   void setExternalCommandInFgPointer(ExternalCommand* ptr);
 
+    void reap();
 };
 
 
