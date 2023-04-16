@@ -16,7 +16,7 @@ void ctrlZHandler(int sig_num) {
     }
     cout <<"Stopping the child!" << endl;
     kill(foregroundChildPID, SIGSTOP);
-    smashy.getJoblist()->addJob(smashy.getExternalCommandInFgPointer(), foregroundChildPID, true);
+    smashy.getJoblist()->addJob(smashy.getExternalCommandInFgPointer()->getCommand(), foregroundChildPID, true); //usual suspect
 }
 
 void ctrlCHandler(int sig_num) {
