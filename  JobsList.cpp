@@ -11,11 +11,12 @@
 #include <iomanip>
 #include "Commands.h"
 #include <time.h>
+#include <ctime>
 
 
 using namespace std;
 
-JobsList::JobEntry::JobEntry(int jobID, pid_t pid, ExternalCommand* command , bool stopped): jobID(jobID), pid(pid), command(command),
+JobsList::JobEntry::JobEntry(int jobID, pid_t pid, string cmd_line , bool stopped): jobID(jobID), pid(pid), cmd_line(cmd_line),
 stopped(stopped)
         {
     time_t* temptime = new ::time_t ;
@@ -27,11 +28,11 @@ JobsList::JobEntry::~JobEntry(){
 }
 
 void JobsList::JobEntry::printJob() const{
-    string cmd_s = _trim(string(command->getCommand()));
-    const char* command1 =command->getCommand();
-    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-    cout<< "[" << jobID << "] "<< command1 ;
-   // cout << " "<< pid << " "<< jobTime;
+    cout<< "[" << jobID << "] "<< cmd_line  << " "<< pid << " ";
+  //  cout << std::ctime(jobTime);
+    time_t now = time(nullptr);
+    double difference = difftime(now, *jobTime);
+   cout << difference <<" sec";
     if(stopped)
     {
         cout<< "(stopped)" ;
@@ -50,15 +51,20 @@ pid_t JobsList::JobEntry::getJobPID() const {
 JobsList::JobsList():numOfJobs(0){
 }
 
-void JobsList::addJob(ExternalCommand *cmd,pid_t pid, bool isStopped) {
+void JobsList::addJob(const char *cmd_line,pid_t pid, bool isStopped) {
     int newJobID = getLargestJobID()+1;
-   const char* newCommand = cmd->getCommand();
-    JobEntry* newJob = new JobEntry(newJobID,pid,cmd,isStopped);
+    char *temp= new char[strlen(cmd_line)];
+    strcpy(temp,cmd_line);
+    string temp1=string (temp);
+    JobEntry* newJob = new JobEntry(newJobID,pid,temp,isStopped);
+    delete temp;
     numOfJobs++;
     jobsVector.push_back(newJob);
 }
 
 int JobsList::getLargestJobID() {
+
+
     int max =0;
     for(const JobEntry *job:jobsVector){
         if(job->getJobID()> max)
@@ -66,7 +72,7 @@ int JobsList::getLargestJobID() {
             max = job->getJobID();
         }
     }
-    return max;
+    return  max;
 }
 
 void JobsList::printJobsList() {
@@ -86,4 +92,15 @@ JobsList::JobEntry *JobsList::getJobById(int jobId) {
 
 bool JobsList::isEmpty() const {
     return jobsVector.empty();
+}
+
+void JobsList::removeJobById(int jobId) {
+    int i=0;
+    for(const JobEntry *job:jobsVector) {
+        if(job->getJobID()==jobId){
+            this->jobsVector.erase(jobsVector.begin()+i);
+            break;
+        }
+        i++;
+    }
 }

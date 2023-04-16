@@ -5,6 +5,8 @@
 //#include <string.h>
 #include <time.h>
 
+using std::string;
+
 const std::string WHITESPACE = " \n\r\t\f\v";
 
 #define COMMAND_ARGS_MAX_LENGTH (400)
@@ -125,12 +127,12 @@ class JobsList {
   private:
    int jobID;
    pid_t pid;
-   ExternalCommand* command;
+   string cmd_line;
    time_t* jobTime;
    bool stopped;
 
   public:
-      JobEntry(int jobID, pid_t pid, ExternalCommand* command , bool stopped);
+      JobEntry(int jobID, pid_t pid,string cmd_line , bool stopped);
       ~JobEntry();
       void printJob() const;
       int getJobID() const;
@@ -141,7 +143,7 @@ class JobsList {
  public:
   JobsList();
   ~JobsList()= default;
-  void addJob(ExternalCommand* cmd,pid_t pid,  bool isStopped = false);
+  void addJob(const char* cmd_line,pid_t pid,  bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();

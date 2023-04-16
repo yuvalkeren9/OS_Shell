@@ -164,8 +164,8 @@ void SmallShell::executeCommand(const char *cmd_line) {
 //    if(isBackground){
 //        pid_t pid =getpid();
 //        this->jobList.addJob(dynamic_cast<ExternalCommand *>(cmd), pid, false);
-//   //     cout<< "job added to the joblist"<< endl;
-//    }
+   //     cout<< "job added to the joblist"<< endl;
+    //}
    //if command doesn't exist
    //TODO: I think they actualy wanted us to put sometihng real here. This is temporary.
    if (cmd == nullptr){
@@ -192,7 +192,7 @@ void SmallShell::updateForegroundCommandPID(pid_t pid) {
 pid_t SmallShell::getForegroundCommandPID() const{
     return foregroundCommandPID;
 }
-JobsList * SmallShell::getJoblist() {
+JobsList* SmallShell::getJoblist() {
     return &jobList;
 }
 
