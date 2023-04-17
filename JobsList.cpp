@@ -41,7 +41,7 @@ void JobsList::JobEntry::printJob() const{
 
 }
 void JobsList::JobEntry::printJob_for_fg() const{
-    cout<< cmd_line  << " : "<< pid << endl;
+    cout<< cmd_line  << " : "<< pid << "\n";
 }
  int JobsList::JobEntry::getJobID() const {
     return jobID;
@@ -151,4 +151,13 @@ int JobsList::getLargestStoppedJobID() const {
             }
         }
         return  max;
+}
+
+void JobsList::killAllJobs() {
+    for(const JobEntry *job:jobsVector){
+      pid_t pid_toKill= job->getJobPID();
+      kill(pid_toKill,SIGTERM);
+      sleep(1);
+      job->printJob_for_fg();
+    }
 }

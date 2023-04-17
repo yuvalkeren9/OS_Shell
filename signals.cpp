@@ -15,7 +15,7 @@ void ctrlZHandler(int sig_num) {
         cout << "No child to stop.. moron" << endl;
         return;
     }
-    cout <<"Stopping the child!" << endl;
+//    cout <<"Stopping the child!" << endl;
     kill(foregroundChildPID, SIGSTOP);
 
     //preperaing the cmd_line
@@ -30,12 +30,12 @@ void ctrlCHandler(int sig_num) {
     auto& smashy = SmallShell::getInstance();
     pid_t foregroundChildPID = smashy.getForegroundCommandPID();
     if (foregroundChildPID == 0){
-        cout << "No child to kill.. moron" << endl;
+//        cout << "No child to kill.. moron" << endl;
         return;
     }
-    cout <<"Killing the child! sorry baby.." << endl;
+//    cout <<"Killing the child! sorry baby.." << endl;
     kill(foregroundChildPID, SIGTERM);
-    cout <<"The child is dead" << endl;
+//    cout <<"The child is dead" << endl;
     wait(nullptr);
 }
 
@@ -47,7 +47,7 @@ void sigChildHandler(int sig_num){
     auto& smashy = SmallShell::getInstance();
     int status;
 
-    cout << "a child has sent SIGCHLD" <<endl;
+//    cout << "a child has sent SIGCHLD" <<endl;
 //    waitpid(-1, &status, WUNTRACED | WCONTINUED | WNOHANG);
 //    if(WIFCONTINUED(status)){
 //        printf("\n currentState = continued!\n");

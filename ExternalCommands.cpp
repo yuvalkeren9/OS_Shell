@@ -40,7 +40,7 @@ void ExternalCommand::execute() {
 //    if (numberOfWords == 0) {
 //        function_args = NULL;
 //    }
-
+    fflush(stdout);
     pid_t pid = fork();
     if (pid == 0) {                                                         //child
         setpgrp();
@@ -84,7 +84,8 @@ void ExternalCommand::execute() {
             cout << "I am in the background!\n";
         }
         else {
-            smashy.setExternalCommandInFgPointer(this);
+//            smashy.setExternalCommandInFgPointer(this);
+            smashy.update_fg_cmd_line(cmd_line);
             smashy.updateForegroundCommandPID(pid);
             waitpid(pid, nullptr, WUNTRACED);
             smashy.updateForegroundCommandPID(0);

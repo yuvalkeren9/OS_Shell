@@ -146,6 +146,12 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if (firstWord.compare("kill") == 0){
       return new KillCommand(cmd_line, &jobList);
   }
+  else if( firstWord.compare("bg") == 0){
+      return new BackgroundCommand(cmd_line, &jobList);
+  }
+  else if( firstWord.compare("quit") == 0){
+      return new QuitCommand(cmd_line, &jobList);
+  }
   else {
       return new ExternalCommand(cmd_line);
   }
@@ -208,6 +214,10 @@ void SmallShell::reap() {
         pid_t pid = waitpid(-1, nullptr, WNOHANG);
         if (pid == 0){
             cout << "no childs to kill" << endl;
+            return;
+        }
+        else if ( pid == -1){
+            cout << "I have no kids.. I am so sad ):" << endl;
             return;
         }
         auto jobToRemove = jobList.getJobByPID(pid);
@@ -316,6 +326,17 @@ int removeMinusFromStringAndReturnAsInt(char* str){
 }
 
 
+QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs) {
+}
 
-
-
+void QuitCommand::execute() {
+    SmallShell& smashy = SmallShell::getInstance();
+    char** arguments= makeArgsArr(cmd_line);
+    string str = arguments[0];
+    if(str.compare("kill")==0){
+        jobs->killAllJobs();
+    }
+    sleep(2);
+    smashy.reap();
+    exit(0);
+}

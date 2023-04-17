@@ -114,6 +114,7 @@ class ShowPidCommand : public BuiltInCommand {
 class JobsList;
 class QuitCommand : public BuiltInCommand {
 // TODO: Add your data members
+    JobsList* jobs;
 public:
   QuitCommand(const char* cmd_line, JobsList* jobs);
   virtual ~QuitCommand() {}
@@ -188,7 +189,10 @@ class ForegroundCommand : public BuiltInCommand {
 };
 
 class BackgroundCommand : public BuiltInCommand {
- // TODO: Add your data members
+    JobsList* jobList;
+    int jobId;
+    static const  int badArgumentsError = -1;
+    static const int emptyListError = -2;
  public:
   BackgroundCommand(const char* cmd_line, JobsList* jobs);
   virtual ~BackgroundCommand() {}
