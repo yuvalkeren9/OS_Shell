@@ -40,6 +40,9 @@ void JobsList::JobEntry::printJob() const{
     cout << endl;
 
 }
+void JobsList::JobEntry::printJob_for_fg() const{
+    cout<< cmd_line  << " : "<< pid << endl;
+}
  int JobsList::JobEntry::getJobID() const {
     return jobID;
 }
@@ -53,6 +56,18 @@ std::string JobsList::JobEntry::get_cmd_line() const{
     return cmd_line;
 }
 
+void JobsList::JobEntry::updateJobStoppedStatus() {
+    if(stopped)
+    {
+    stopped= false;
+    } else{
+        stopped=true;
+    }
+}
+
+bool JobsList::JobEntry::isStopped() const {
+    return stopped;
+}
 
 
 JobsList::JobsList():numOfJobs(0){
@@ -69,7 +84,7 @@ void JobsList::addJob(const char *cmd_line,pid_t pid, bool isStopped) {
     jobsVector.push_back(newJob);
 }
 
-int JobsList::getLargestJobID() {
+int JobsList::getLargestJobID() const {
 
 
     int max =0;
@@ -122,4 +137,18 @@ void JobsList::removeJobById(int jobId) {
         }
         i++;
     }
+}
+
+int JobsList::getLargestStoppedJobID() const {
+        int max =0;
+        for(const JobEntry *job:jobsVector){
+            if(job->isStopped())
+            {
+                if(job->getJobID()> max)
+                {
+                    max = job->getJobID();
+                }
+            }
+        }
+        return  max;
 }

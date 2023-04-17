@@ -136,9 +136,13 @@ class JobsList {
       JobEntry(int jobID, pid_t pid,string cmd_line , bool stopped);
       ~JobEntry();
       void printJob() const;
+      void printJob_for_fg() const;
       int getJobID() const;
       pid_t getJobPID() const;
       std::string get_cmd_line() const;
+      void updateJobStoppedStatus();
+      bool isStopped() const;
+
 
   };
  // TODO: Add your data members
@@ -153,7 +157,8 @@ class JobsList {
   void removeJobById(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
-  int getLargestJobID();
+  int getLargestJobID() const;
+  int getLargestStoppedJobID() const;
   bool isEmpty() const;
   JobsList::JobEntry* getJobByPID(pid_t jobPID) const;
 
