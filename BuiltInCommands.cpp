@@ -188,12 +188,26 @@ void ForegroundCommand::execute() {
     pid_t pid = jobEntry->getJobPID();
 
     smashy.updateForegroundCommandPID(pid);
-    kill(pid, SIGCONT);
-    //TODO: remove the job from joblist
+    smashy.update_fg_cmd_line(jobEntry->get_cmd_line());
+    //TODO: print the job cmd_line thingy and the pid
 
-    waitpid(pid, nullptr, 0);
+    kill(pid, SIGCONT);
+
+    jobsList->removeJobById(jobId);
+
+    waitpid(pid, nullptr, WUNTRACED);
 }
 
+
+BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line) {
+    char** arguments = makeArgsArr(cmd_line);
+
+
+}
+
+void BackgroundCommand::execute() {
+
+}
 
 
 

@@ -48,6 +48,13 @@ pid_t JobsList::JobEntry::getJobPID() const {
     return pid;
 }
 
+
+std::string JobsList::JobEntry::get_cmd_line() const{
+    return cmd_line;
+}
+
+
+
 JobsList::JobsList():numOfJobs(0){
 }
 

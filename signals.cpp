@@ -3,6 +3,7 @@
 #include "signals.h"
 #include "Commands.h"
 #include <sys/wait.h>
+#include <string.h>
 
 
 using namespace std;
@@ -16,8 +17,13 @@ void ctrlZHandler(int sig_num) {
     }
     cout <<"Stopping the child!" << endl;
     kill(foregroundChildPID, SIGSTOP);
-    smashy.getJoblist()->addJob("Anna zack", foregroundChildPID, true); //usual suspect !!
-    //smashy.getExternalCommandInFgPointer()->getCommand()
+
+    //preperaing the cmd_line
+    string temp = smashy.get_fg_cmd_line();
+    const char* cmd_line = (temp).c_str();
+
+    smashy.getJoblist()->addJob(cmd_line, foregroundChildPID, true); //usual suspect !!
+//    smashy.getExternalCommandInFgPointer()->getCommand()
 }
 
 void ctrlCHandler(int sig_num) {

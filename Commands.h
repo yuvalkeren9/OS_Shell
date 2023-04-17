@@ -1,6 +1,7 @@
 #ifndef SMASH_COMMAND_H_
 #define SMASH_COMMAND_H_
 
+#include <utility>
 #include <vector>
 //#include <string.h>
 #include <time.h>
@@ -137,6 +138,7 @@ class JobsList {
       void printJob() const;
       int getJobID() const;
       pid_t getJobPID() const;
+      std::string get_cmd_line() const;
 
   };
  // TODO: Add your data members
@@ -238,6 +240,7 @@ class SmallShell {
     JobsList jobList;
     pid_t foregroundCommandPID;
     ExternalCommand* externalCommandInFgPointer;
+    string ForeGround_cmd_line;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -260,6 +263,14 @@ class SmallShell {
 
   ExternalCommand* getExternalCommandInFgPointer() const;
   void setExternalCommandInFgPointer(ExternalCommand* ptr);
+
+  string get_fg_cmd_line() const {
+      return ForeGround_cmd_line;
+  }
+
+  void update_fg_cmd_line(string cmd_line){
+      ForeGround_cmd_line = cmd_line;
+  }
 
     void reap();
 };
