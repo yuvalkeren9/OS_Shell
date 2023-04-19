@@ -7,6 +7,11 @@
 #include <sys/wait.h>
 #include <iomanip>
 #include "Commands.h"
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 using namespace std;
 
@@ -122,6 +127,23 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   char *arguments[COMMAND_MAX_ARGS];
   int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
+
+
+  //TODO fucntion
+
+  string meow2 = cmd_line;
+  bool meow = (meow2.find_first_of('>') != string::npos);
+
+
+
+
+
+
+
+
+
+
+
 //  if (firstWord.compare("pwd") == 0) {
 //    return new GetCurrDirCommand(cmd_line);
 //  }
@@ -151,6 +173,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   }
   else if( firstWord.compare("quit") == 0){
       return new QuitCommand(cmd_line, &jobList);
+  }
+  else if (meow){
+          return new RedirectionCommand(cmd_line);
   }
   else {
       return new ExternalCommand(cmd_line);
@@ -339,4 +364,56 @@ void QuitCommand::execute() {
     sleep(2);
     smashy.reap();
     exit(0);
+}
+
+RedirectionCommand::RedirectionCommand(const char *cmd_line) : Command(cmd_line) {
+
+}
+
+void RedirectionCommand::execute() {
+    auto& smashy = SmallShell::getInstance();
+    string cmd_s = _trim(string(cmd_line));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+    //TODO " remove everything after > and >> function
+
+    char meow[COMMAND_ARGS_MAX_LENGTH];
+    for (int i = 0; i < strlen(cmd_line); ++i){
+        if (cmd_line[i] == '>'){
+            meow[i] = '\0';
+            break;
+        }
+        else{
+            meow[i] = cmd_line[i];
+        }
+    }
+
+    cout << meow << endl;
+
+    auto commandToExecutre = smashy.CreateCommand(meow);
+
+
+
+
+
+    if(string(arguments[1]).compare(">")==0)
+    {
+
+        int stdout_fd = dup(1);
+
+
+
+        close(1);
+        open(arguments[2],O_CREAT | O_RDWR);
+
+
+        commandToExecutre->execute();
+
+
+        close(1);
+        dup2(stdout_fd,1);
+        //open(in channel of
+    }
+
 }

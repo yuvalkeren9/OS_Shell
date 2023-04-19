@@ -295,8 +295,34 @@ void KillCommand::execute() {
     int signum = removeMinusFromStringAndReturnAsInt(arguments[0]);  //TODO: check for errors
     int jobId = stoi(string(arguments[1]));  //TODO: do try catch
 
+
+    //checking signum
+
+    if( signum == -1){
+        cout << "error converting the signal number to a string" << endl;
+        return;
+    }
+    else if (signum > 32 || signum <0){
+        cout << " illegal number" << endl;
+        //TODO: check for real numbers in this if loop
+    }
+
     //get pid
-    pid_t pid = jobsList->getJobById(jobId)->getJobPID();
+    auto jobEntry  = jobsList->getJobById(jobId);
+    if (jobEntry == nullptr){
+        cout << "no such job exists. you assshole" << endl;
+    }
+    pid_t pid = jobEntry->getJobPID();
+
+
+    //updating jobList for specif signals that are sent
+
+    if (signum == SIGCONT){
+        //TODO: update jobentry
+    }
+    else if(signum == SIGSTOP){
+        //TODO: update the jobentry
+    }
 
     //send messege
     kill(pid, signum);
