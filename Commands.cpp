@@ -101,6 +101,20 @@ char** makeArgsArr(const char *cmd_line){
     return function_args;
 }
 
+string cutUntillChar(const char* cmd_line , char character){// return value not includibg the char sent
+    string str;
+    for (int i = 0; i < strlen(cmd_line); ++i){
+        if (cmd_line[i] == character){
+            str[i] = '\0';
+            break;
+        }
+        else{
+            str[i] = cmd_line[i];
+        }
+    }
+    return str;
+}
+
 
 // TODO: Add your implementation for classes in Commands.h 
 
@@ -376,44 +390,23 @@ void RedirectionCommand::execute() {
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
-    //TODO " remove everything after > and >> function
-
-    char meow[COMMAND_ARGS_MAX_LENGTH];
-    for (int i = 0; i < strlen(cmd_line); ++i){
-        if (cmd_line[i] == '>'){
-            meow[i] = '\0';
-            break;
-        }
-        else{
-            meow[i] = cmd_line[i];
-        }
-    }
-
-    cout << meow << endl;
-
-    auto commandToExecutre = smashy.CreateCommand(meow);
-
-
-
+    string meow1 = cutUntillChar(cmd_line,'>');
+    const char * cuttedCommand = meow1.c_str();
+    cout << cuttedCommand << endl;
+    auto commandToExecutre = smashy.CreateCommand(cuttedCommand);
 
 
     if(string(arguments[1]).compare(">")==0)
     {
-
         int stdout_fd = dup(1);
-
-
 
         close(1);
         open(arguments[2],O_CREAT | O_RDWR);
 
-
         commandToExecutre->execute();
-
 
         close(1);
         dup2(stdout_fd,1);
-        //open(in channel of
     }
 
 }

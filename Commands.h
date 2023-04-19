@@ -21,7 +21,7 @@ bool _isBackgroundComamnd(const char* cmd_line);
 bool isSpecialExternalCommand(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
 char** makeArgsArr(const char *cmd_line);
-
+string cutUntillChar(const char* toCut , char character);
 char* removeMinusFromStartOfString(char *str);
 int convertStringToInt(char* str);
 int removeMinusFromStringAndReturnAsInt(char* str);
