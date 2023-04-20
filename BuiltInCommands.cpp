@@ -14,11 +14,8 @@
 #include <errno.h>
 
 
-using std::string;
-using std::cout;
 using namespace std;
 
-//TODO: ignore the & if it is built in
 
 /** change dir command */
 ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd, char*& previous)
@@ -26,11 +23,8 @@ ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd, char*&
 }
 
 void ChangeDirCommand::execute() {
-//    string first_arg = _trim(string(cmd_line));
-//    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     if(plastPwd[2] != NULL){
-      //  std::cout << "My good friend, too many arguments. fuck off. \n";
-        cout << "smash error: too many arguments" << std::endl;
+        cerr << "smash error: too many arguments" << std::endl;
         return;
     }
     char buffer[COMMAND_ARGS_MAX_LENGTH];
@@ -40,8 +34,7 @@ void ChangeDirCommand::execute() {
     if(first_arg == "-"){                                                   //special - flag
         if(previous == nullptr)
         {
-          //  std::cout << "smash error: cd: OLDPWD not set\n";
-            cout << "smash error: cd: OLDPWD not set" <<std::endl;
+            cerr << "smash error: cd: OLDPWD not set" <<std::endl;
             return;
         }
         else{
@@ -107,36 +100,7 @@ smash.getJoblist()->printJobsList();
 /** fg command */
 
 ForegroundCommand::ForegroundCommand(const char *cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), jobId(0), jobsList(jobs) {
-//    char** arguments = makeArgsArr(cmd_line);   //if only we had c++14...
-//    int temp;
-//
-//    if (arguments[0] == NULL){
-//        if (jobsList->isEmpty()){
-//            jobId = emptyListError;
-//            delete[] arguments;
-//            return;
-//        }
-//        jobId = jobsList->getLargestJobID();
-//        delete[] arguments;
-//        return;
-//    }
-//
-//    if (arguments[1] != NULL){
-//        jobId = badArgumentsError;
-//        delete[] arguments;
-//        return;
-//    }
-//
-//    try {
-//        temp = stoi(string(arguments[0]));
-//    }
-//    catch(std::exception&) {   //bad argument
-//        jobId = badArgumentsError;
-//        delete[] arguments;
-//        return;
-//    }
-//    jobId = temp;
-//    delete[] arguments;
+
 }
 
 
@@ -149,7 +113,7 @@ void ForegroundCommand::execute() {
 
     if (arguments[0] == NULL){
         if (jobsList->isEmpty()){
-            cout << "smash error: fg: jobs list is empty" << endl;
+            cerr << "smash error: fg: jobs list is empty" << endl;
             return;
         }
         else{
@@ -158,7 +122,7 @@ void ForegroundCommand::execute() {
         delete[] arguments;
     }
     else if(arguments[1] != NULL){
-        cout << "smash error: fg: invalid arguments" << std::endl;
+        cerr << "smash error: fg: invalid arguments" << std::endl;
         delete[] arguments;
         return;
     }
@@ -168,7 +132,7 @@ void ForegroundCommand::execute() {
             temp = stoi(string(arguments[0]));
         }
         catch (std::exception &) {   //bad argument
-            cout << "smash error: fg: invalid arguments" << std::endl;
+            cerr << "smash error: fg: invalid arguments" << std::endl;
             delete[] arguments;
             return;
         }
@@ -179,7 +143,7 @@ void ForegroundCommand::execute() {
     auto jobEntry = jobsList->getJobById(jobId);
 
     if(jobEntry == nullptr){
-        cout << "smash error: fg: job-id " << jobId << " does not exist" << endl;
+        cerr << "smash error: fg: job-id " << jobId << " does not exist" << endl;
         return;
     }
 
@@ -189,7 +153,6 @@ void ForegroundCommand::execute() {
     smashy.updateForegroundCommandPID(pid);
 
     string meow = jobEntry->get_cmd_line();
-    cout << "The cmd line inside fg is: " << meow << endl;
     smashy.update_fg_cmd_line(meow);
 
     jobEntry->printJob_for_fg();
@@ -241,13 +204,13 @@ void BackgroundCommand::execute() {
     if (arguments[0] == NULL){
         jobId = jobList->getLargestStoppedJobID();
         if (jobId == 0){
-            cout << "smash error: bg: there is no stopped jobs to resume" << endl;
+            cerr << "smash error: bg: there is no stopped jobs to resume" << endl;
             delete[] arguments;
             return;
         }
     }
     else if(arguments[1] != NULL){
-        cout << "smash error: bg: invalid arguments" << endl;
+        cerr << "smash error: bg: invalid arguments" << endl;
         delete[] arguments;
     }
 
@@ -257,7 +220,7 @@ void BackgroundCommand::execute() {
             temp = stoi(string(arguments[0]));
         }
         catch (std::exception &) {   //bad argument
-            cout << "smash error: bg: invalid arguments" << std::endl;
+            cerr << "smash error: bg: invalid arguments" << std::endl;
             delete[] arguments;
             return;
         }
@@ -268,7 +231,7 @@ void BackgroundCommand::execute() {
     auto jobEntry = jobList->getJobById(jobId);
 
     if(jobEntry == nullptr){
-        cout << "smash error: bg: job-id " << jobId << " does not exist" << endl;
+        cerr << "smash error: bg: job-id " << jobId << " does not exist" << endl;
         return;
     }
 
@@ -289,7 +252,6 @@ KillCommand::KillCommand(const char *cmd_line, JobsList *jobs) : BuiltInCommand(
 }
 
 void KillCommand::execute() {
-    //TOdo: check for arguments (inclduing if a too large signal was sent
     char** arguments = makeArgsArr(cmd_line);
 
     int signum = removeMinusFromStringAndReturnAsInt(arguments[0]);

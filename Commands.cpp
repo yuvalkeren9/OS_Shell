@@ -13,6 +13,16 @@
 #include <fcntl.h>
 #include <assert.h>
 
+/*
+* Macro providing a “safe” way to invoke system calls
+*/
+#define DO_SYS_CUSTOM( syscall, sysCallName ) do { \
+/* safely invoke a system call */ \
+if( (syscall) == -1 ) {                            \
+    perror("smash error: " + sysCallName + " failed" ); \
+    return; \
+    } \
+} while( 0 )                                       \
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -519,6 +529,7 @@ PipeCommand::PipeCommand(const char *cmd_line) : Command(cmd_line)  {
 void PipeCommand::execute() {
 
     //TODO: ignore &
+    //TODO: instead of always returning, maybe do a "restore" function" for edge cases
 
     auto& smashy = SmallShell::getInstance();
     string cmd_s = _trim(string(cmd_line));
@@ -527,7 +538,6 @@ void PipeCommand::execute() {
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
     int pipeLocationIndex = getPipeLocation(arguments, numberOfWords);
-
 
 
     enum RedirectionType {CoutPipe, CerrPipe, Other};
@@ -544,7 +554,7 @@ void PipeCommand::execute() {
 
     if (redirectionType == RedirectionType::Other){
         cout << "Invalid arguments thing" << endl;
-        //TODO: real error message
+        assert(false);
         return;
     }
 
@@ -574,61 +584,81 @@ void PipeCommand::execute() {
 
     //so we can put std::cout back in FDT after we are done with redirection
     int stdin_fd = dup(STDIN_FDT);
-    perror("first dup  error");
+    if (stdin_fd == -1){
+        perror("smash error: dup failed");
+        return;
+    }
 
     int stdout_fd = dup(STDOUT_FDT);
-    perror("second dup  error");
+    if (stdout_fd == -1){
+        perror("smash error: dup failed");
+        return;
+    }
 
     int stderror_fd = dup(STDERROR_FDT);
-    perror("third dup  error");
+    if (stderror_fd == -1){
+        perror("smash error: dup failed");
+        return;
+    }
 
 
     int my_pipe[2];
-    if(pipe(my_pipe) != 0 ){
-        perror("first pipe error");
-
+    if(pipe(my_pipe) == -1 ){
+        perror("smash error: pipe failed");
+        return;
     }
-
 
 
     switch (redirectionType){
         case CoutPipe:
-//            close(STDOUT_FDT);
-//            perror("first close error 1");
-            dup2(my_pipe[PIPE_WRITE], STDOUT_FDT);
-            perror("first close error 22222222");
-            sleep(1);
-            close(my_pipe[PIPE_WRITE]);
-            perror("first close error 3");
+            if(dup2(my_pipe[PIPE_WRITE], STDOUT_FDT) == -1){
+                perror("smash error: dup2 failed");
+                return;
+            }
+            if(close(my_pipe[PIPE_WRITE]) == -1){
+                perror("smash error: close failed");
+                return;
+            }
             break;
         case CerrPipe:
-//            close(STDERROR_FDT);
-//            perror("first close error 1");
-            dup2(my_pipe[PIPE_WRITE], STDERROR_FDT);
-//            perror("first close error 33333333");
-            close(my_pipe[PIPE_WRITE]);
-//            perror("first close error 3");
+            if( dup2(my_pipe[PIPE_WRITE], STDERROR_FDT) == -1){
+                perror("smash error: dup2 failed");
+                return;
+            }
+            if(close(my_pipe[PIPE_WRITE]) == -1){
+                perror("smash error: close failed");
+                return;
+            }
             break;
         default:
             cout <<"VERY BVERY BAD" << endl;
     }
 
     firstCommand->execute();
+    delete firstCommand;
 
     switch (redirectionType){
         case CoutPipe:
             if (dup2(stdout_fd, STDOUT_FDT) == -1 ){
-                perror("dup2 im checking right now");
+                perror("smash error: dup2 failed");
+                return;
             }
 
-            close(stdout_fd);
-//            perror("after exe1");
+            if( close(stdout_fd) == -1){
+                perror("smash error: close failed");
+                return;
+            };
 
             break;
         case CerrPipe:
-            close(2);  //location of the pipe
-            dup2(stderror_fd, STDERROR_FDT);
-            close(stderror_fd);
+            if( dup2(stderror_fd, STDERROR_FDT) == 1){
+                perror("smash error: dup2 failed");
+                return;
+            }
+            if (close(stderror_fd) == -1){
+                perror("smash error: close failed");
+                return;
+            }
             break;
         default:
             cout <<"VERY BVERY BAD meow" << endl;
@@ -636,28 +666,31 @@ void PipeCommand::execute() {
 
 
 
-    close(STDIN_FDT);
-//    perror("first close error 7978978978");
-    dup2(my_pipe[PIPE_READ], STDIN_FDT);
-//    perror("first close error 121212121212");
-
-
+    if (close(STDIN_FDT) == -1){
+        perror("smash error: close failed");
+        return;
+    }
+    if(dup2(my_pipe[PIPE_READ], STDIN_FDT) == -1){
+        perror("smash error: dup2 failed");
+        return;
+    }
 
 
     secondCommand->execute();
-
-
-    close(0);
-    dup2(stdin_fd, STDIN_FDT);
-
-
-    delete firstCommand;
     delete secondCommand;
 
-    close(my_pipe[0]);
-    close(my_pipe[1]);
 
 
+    if(dup2(stdin_fd, STDIN_FDT) == -1){
+        perror("smash error: dup2 failed");
+        return;
+    }
+
+
+    if(close(my_pipe[0]) == -1){
+        perror("smash error12345: close failed");
+        return;
+    }
 }
 
 BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
