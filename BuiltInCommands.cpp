@@ -18,7 +18,7 @@ using std::string;
 using std::cout;
 using namespace std;
 
-
+//TODO: ignore the & if it is built in
 
 /** change dir command */
 ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd, char*& previous)

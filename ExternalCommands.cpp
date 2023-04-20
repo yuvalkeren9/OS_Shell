@@ -40,7 +40,7 @@ void ExternalCommand::execute() {
 //    if (numberOfWords == 0) {
 //        function_args = NULL;
 //    }
-    fflush(stdout);
+//    fflush(stdout);
     pid_t pid = fork();
     if (pid == 0) {                                                         //child
         setpgrp();

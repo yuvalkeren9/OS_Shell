@@ -11,6 +11,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <assert.h>
+
+
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
+#define STDIN_FDT 0
+#define STDOUT_FDT 1
+#define STDERROR_FDT 2
 
 
 using namespace std;
@@ -105,15 +114,28 @@ string cutUntillChar(const char* cmd_line , char character){// return value not 
     string str;
     for (int i = 0; i < strlen(cmd_line); ++i){
         if (cmd_line[i] == character){
-            str[i] = '\0';
             break;
         }
         else{
-            str[i] = cmd_line[i];
+            str += cmd_line[i];
         }
     }
     return str;
 }
+
+string cutAfterChar(const char* cmd_line , char character){// return value not includibg the char sent
+    string str;
+    int firstAppearIndex = (string(cmd_line).find_first_of(character));
+    if(firstAppearIndex!=string(cmd_line).length())
+    {
+        firstAppearIndex++;
+    }
+    for (int i = 0; i < strlen(cmd_line)-firstAppearIndex; ++i) {
+        str += cmd_line[i + firstAppearIndex];
+    }
+    return str;
+}
+
 
 
 // TODO: Add your implementation for classes in Commands.h 
@@ -138,69 +160,26 @@ void SmallShell::updatePreviousPath(char *path) {
 Command * SmallShell::CreateCommand(const char* cmd_line) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  char *arguments[COMMAND_MAX_ARGS];
-  int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
 
+  string cmd_line_as_string = cmd_line;
 
-  //TODO fucntion
+  bool isRedirectionCommand = (cmd_line_as_string.find_first_of('>') != string::npos);
+  bool isPipeCommand(cmd_line_as_string.find_first_of('|') != string::npos);
+  BuiltInCommand* command = checkCmdForBuiltInCommand(cmd_line);
 
-  string meow2 = cmd_line;
-  bool meow = (meow2.find_first_of('>') != string::npos);
-
-
-
-
-
-
-
-
-
-
-
-//  if (firstWord.compare("pwd") == 0) {
-//    return new GetCurrDirCommand(cmd_line);
-//  }
-  if (firstWord.compare("showpid") == 0) {
-    return new ShowPidCommand(cmd_line);
+  if (isRedirectionCommand){
+      return new RedirectionCommand(cmd_line);
   }
-  else if(firstWord.compare("pwd") == 0){
-      return new GetCurrDirCommand(cmd_line);
+  else if(isPipeCommand){
+      return new PipeCommand(cmd_line);
   }
-  else if(firstWord.compare("cd") == 0){
-      return new ChangeDirCommand(cmd_line, arguments, previousPath);
-  }
-  else if(firstWord.compare("chprompt") == 0){
-      return new ChPromtCommand(cmd_line, shellPromt);
-  }
-  else if(firstWord.compare("jobs") == 0){
-      return new JobsCommand(cmd_line);
-  }
-  else if(firstWord.compare("fg") == 0){
-      return new ForegroundCommand(cmd_line, &jobList );
-  }
-  else if (firstWord.compare("kill") == 0){
-      return new KillCommand(cmd_line, &jobList);
-  }
-  else if( firstWord.compare("bg") == 0){
-      return new BackgroundCommand(cmd_line, &jobList);
-  }
-  else if( firstWord.compare("quit") == 0){
-      return new QuitCommand(cmd_line, &jobList);
-  }
-  else if (meow){
-          return new RedirectionCommand(cmd_line);
+  else if( command != nullptr){
+      return command;
   }
   else {
       return new ExternalCommand(cmd_line);
   }
-//  else if ...
-//  .....
-//  else {
-//    return new ExternalCommand(cmd_line);
-//  }
-
-  return nullptr;
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
@@ -389,6 +368,9 @@ RedirectionCommand::RedirectionCommand(const char *cmd_line) : Command(cmd_line)
 
 
 void RedirectionCommand::execute() {
+
+    //TODO: ignore &
+
     auto& smashy = SmallShell::getInstance();
     string cmd_s = _trim(string(cmd_line));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
@@ -434,15 +416,14 @@ void RedirectionCommand::execute() {
     perror("first close  error");
 
 
-    //Elad, I made this in a switch case becasue it's very readable for us
     int fileToOpenIndex = crocLocationIndex + 1;
     switch (redirectionType){
         case OneCrocodile:
-            open(arguments[fileToOpenIndex],O_CREAT | O_WRONLY);
+            open(arguments[fileToOpenIndex],O_CREAT | O_RDWR, S_IRWXU);
             perror("one corocidle error");
             break;
         case TwoCrocodile:
-            open(arguments[fileToOpenIndex],O_CREAT | O_WRONLY | O_APPEND);
+            open(arguments[fileToOpenIndex],O_CREAT | O_RDWR | O_APPEND, S_IRWXU); //TODO: figure ou what positions to give
             perror("two corocidle error");
 
             break;
@@ -459,6 +440,13 @@ void RedirectionCommand::execute() {
 
     dup2(stdout_fd,1);
     perror("second dup  error");
+
+
+
+    close(stdout_fd);
+    perror("third close error");
+
+
 
 
 
@@ -507,3 +495,223 @@ int getCrocLocation(char** arguments, int numberOfWords){
         }
     }
 }
+
+int getPipeLocation(char** arguments, int numberOfWords){
+    int index = findFirstCharInArgs("|", arguments, numberOfWords);
+    if (index != -1){
+        return index;
+    }
+    else{
+        index = findFirstCharInArgs("|&", arguments, numberOfWords);
+        if (index != -1){
+            return index;
+        }
+        else{
+            return -1;
+        }
+    }
+}
+
+PipeCommand::PipeCommand(const char *cmd_line) : Command(cmd_line)  {
+
+}
+
+void PipeCommand::execute() {
+
+    //TODO: ignore &
+
+    auto& smashy = SmallShell::getInstance();
+    string cmd_s = _trim(string(cmd_line));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+    int pipeLocationIndex = getPipeLocation(arguments, numberOfWords);
+
+
+
+    enum RedirectionType {CoutPipe, CerrPipe, Other};
+    RedirectionType redirectionType;
+    if (string(arguments[pipeLocationIndex]) == "|"){
+        redirectionType = CoutPipe;
+    }
+    else if(string(arguments[pipeLocationIndex]) == "|&"){
+        redirectionType = CerrPipe;
+    }
+    else{
+        redirectionType = Other;
+    }
+
+    if (redirectionType == RedirectionType::Other){
+        cout << "Invalid arguments thing" << endl;
+        //TODO: real error message
+        return;
+    }
+
+
+    //creating the command objects
+
+    string temp = cutUntillChar(cmd_line,'|');
+    const char * cuttedCommand = temp.c_str();
+    auto firstCommand = smashy.CreateCommand(cuttedCommand);
+
+    char letter;
+    if (redirectionType == RedirectionType::CoutPipe){
+        letter = '|';
+    }
+    else{
+        letter = '&';
+    }
+    const char* cmd_lineasfasf = cmd_line;
+    string temp2 = cutAfterChar(cmd_lineasfasf, letter);
+    const char * cuttedCommand2 = temp2.c_str();
+
+    auto secondCommand = smashy.CreateCommand(cuttedCommand2);
+
+
+
+
+
+    //so we can put std::cout back in FDT after we are done with redirection
+    int stdin_fd = dup(STDIN_FDT);
+    perror("first dup  error");
+
+    int stdout_fd = dup(STDOUT_FDT);
+    perror("second dup  error");
+
+    int stderror_fd = dup(STDERROR_FDT);
+    perror("third dup  error");
+
+
+    int my_pipe[2];
+    if(pipe(my_pipe) != 0 ){
+        perror("first pipe error");
+
+    }
+
+
+
+    switch (redirectionType){
+        case CoutPipe:
+//            close(STDOUT_FDT);
+//            perror("first close error 1");
+            dup2(my_pipe[PIPE_WRITE], STDOUT_FDT);
+            perror("first close error 22222222");
+            sleep(1);
+            close(my_pipe[PIPE_WRITE]);
+            perror("first close error 3");
+            break;
+        case CerrPipe:
+//            close(STDERROR_FDT);
+//            perror("first close error 1");
+            dup2(my_pipe[PIPE_WRITE], STDERROR_FDT);
+//            perror("first close error 33333333");
+            close(my_pipe[PIPE_WRITE]);
+//            perror("first close error 3");
+            break;
+        default:
+            cout <<"VERY BVERY BAD" << endl;
+    }
+
+    firstCommand->execute();
+
+    switch (redirectionType){
+        case CoutPipe:
+            if (dup2(stdout_fd, STDOUT_FDT) == -1 ){
+                perror("dup2 im checking right now");
+            }
+
+            close(stdout_fd);
+//            perror("after exe1");
+
+            break;
+        case CerrPipe:
+            close(2);  //location of the pipe
+            dup2(stderror_fd, STDERROR_FDT);
+            close(stderror_fd);
+            break;
+        default:
+            cout <<"VERY BVERY BAD meow" << endl;
+    }
+
+
+
+    close(STDIN_FDT);
+//    perror("first close error 7978978978");
+    dup2(my_pipe[PIPE_READ], STDIN_FDT);
+//    perror("first close error 121212121212");
+
+
+
+
+    secondCommand->execute();
+
+
+    close(0);
+    dup2(stdin_fd, STDIN_FDT);
+
+
+    delete firstCommand;
+    delete secondCommand;
+
+    close(my_pipe[0]);
+    close(my_pipe[1]);
+
+
+}
+
+BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
+
+    assert(cmd_line != nullptr);
+    //init annoying stuff for backward compability
+    char** arguments = new char*[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+
+    //deal with & case
+    char cmd_line_edit[COMMAND_ARGS_MAX_LENGTH];
+    strcpy(cmd_line_edit, cmd_line);
+    if(_isBackgroundComamnd(cmd_line)){
+        _removeBackgroundSign(cmd_line_edit);
+    }
+
+    string cmd_s = _trim(string(cmd_line_edit));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+
+    if (firstWord == "pid") {
+        return new ShowPidCommand(cmd_line_edit);
+    }
+    else if(firstWord == "showpid"){
+        return new GetCurrDirCommand(cmd_line);
+    }
+    else if(firstWord == "cd"){
+        return new ChangeDirCommand(cmd_line, arguments, previousPath);
+    }
+    else if(firstWord == "chprompt"){
+        return new ChPromtCommand(cmd_line, shellPromt);
+    }
+    else if(firstWord == "jobs"){
+        return new JobsCommand(cmd_line);
+    }
+    else if(firstWord == "fg"){
+        return new ForegroundCommand(cmd_line, &jobList );
+    }
+    else if(firstWord == "kill"){
+        return new KillCommand(cmd_line, &jobList);
+    }
+    else if(firstWord == "bg"){
+        return new BackgroundCommand(cmd_line, &jobList);
+    }
+    else if(firstWord == "quit"){
+        return new QuitCommand(cmd_line, &jobList);
+    }
+    else{
+        return nullptr;
+    }
+}
+
+
+
+
+
+

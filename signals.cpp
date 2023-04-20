@@ -42,30 +42,3 @@ void ctrlCHandler(int sig_num) {
 void alarmHandler(int sig_num) {
   // TODO: Add your implementation
 }
-
-void sigChildHandler(int sig_num){
-    auto& smashy = SmallShell::getInstance();
-    int status;
-
-//    cout << "a child has sent SIGCHLD" <<endl;
-//    waitpid(-1, &status, WUNTRACED | WCONTINUED | WNOHANG);
-//    if(WIFCONTINUED(status)){
-//        printf("\n currentState = continued!\n");
-//    }
-//    if(WIFSIGNALED(status)){
-//        printf("\n currentState = signaled!\n");
-//    }
-//    if(WIFEXITED(status)){
-//        printf("\nterminattor\n");
-//    }
-//    if(WIFSTOPPED(status)){
-//        printf("\n currentState = stopped!\n");
-//    }
-//    cout << "went past checks";
-//    if (smashy.getForegroundCommandPID() != 0){
-//        return;
-//    }
-//    else{
-//        wait(nullptr);
-//    }
-}

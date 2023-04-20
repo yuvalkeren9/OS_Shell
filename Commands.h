@@ -22,6 +22,7 @@ bool isSpecialExternalCommand(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
 char** makeArgsArr(const char *cmd_line);
 string cutUntillChar(const char* toCut , char character);
+string cutAfterChar(const char* cmd_line , char character);
 
 
 char* removeMinusFromStartOfString(char *str);
@@ -31,6 +32,8 @@ int removeMinusFromStringAndReturnAsInt(char* str);
 
 int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs);
 int getCrocLocation(char** arguments, int numberOfWords);
+int getPipeLocation(char** arguments, int numberOfWords);
+
 
 
 
@@ -279,8 +282,10 @@ class SmallShell {
 
   ExternalCommand* getExternalCommandInFgPointer() const;
   void setExternalCommandInFgPointer(ExternalCommand* ptr);
+  BuiltInCommand* checkCmdForBuiltInCommand(const char* cmd_line);
 
-  string get_fg_cmd_line() const {
+
+    string get_fg_cmd_line() const {
       return ForeGround_cmd_line;
   }
 
