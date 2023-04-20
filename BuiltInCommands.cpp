@@ -292,37 +292,43 @@ void KillCommand::execute() {
     //TOdo: check for arguments (inclduing if a too large signal was sent
     char** arguments = makeArgsArr(cmd_line);
 
-    int signum = removeMinusFromStringAndReturnAsInt(arguments[0]);  //TODO: check for errors
-    int jobId = stoi(string(arguments[1]));  //TODO: do try catch
+    int signum = removeMinusFromStringAndReturnAsInt(arguments[0]);
+    if (signum == -1){
+        std::cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
+
+    int jobId;
+    try{
+        jobId = stoi(string(arguments[1]));
+    }
+    catch (std::exception& e){
+        std::cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
 
 
     //checking signum
-
-    if( signum == -1){
-        cout << "error converting the signal number to a string" << endl;
+    if (signum > 30 || signum <= 0){
+        cerr << "smash error: kill: invalid arguments" << endl;
         return;
-    }
-    else if (signum > 32 || signum <0){
-        cout << " illegal number" << endl;
-        //TODO: check for real numbers in this if loop
     }
 
     //get pid
     auto jobEntry  = jobsList->getJobById(jobId);
     if (jobEntry == nullptr){
-        cout << "no such job exists. you assshole" << endl;
+        cerr << "smash error: kill: job-id " << jobId << " does not exist" << endl;
+        return;
     }
     pid_t pid = jobEntry->getJobPID();
 
 
     //updating jobList for specif signals that are sent
 
-    if (signum == SIGCONT){
-        //TODO: update jobentry
+    if (signum == SIGCONT || signum == SIGSTOP){
+        jobEntry->updateJobStoppedStatus();
     }
-    else if(signum == SIGSTOP){
-        //TODO: update the jobentry
-    }
+
 
     //send messege
     kill(pid, signum);
