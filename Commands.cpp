@@ -384,29 +384,126 @@ RedirectionCommand::RedirectionCommand(const char *cmd_line) : Command(cmd_line)
 
 }
 
+
+
+
+
 void RedirectionCommand::execute() {
     auto& smashy = SmallShell::getInstance();
     string cmd_s = _trim(string(cmd_line));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+    int crocLocationIndex = getCrocLocation(arguments, numberOfWords);
+
     string meow1 = cutUntillChar(cmd_line,'>');
     const char * cuttedCommand = meow1.c_str();
-    cout << cuttedCommand << endl;
     auto commandToExecutre = smashy.CreateCommand(cuttedCommand);
 
 
-    if(string(arguments[1]).compare(">")==0)
-    {
-        int stdout_fd = dup(1);
+    enum RedirectionType {OneCrocodile, TwoCrocodile, Other};
+    RedirectionType redirectionType;
+    if (string(arguments[crocLocationIndex]) == ">"){
+        cout << "OneCroc" << endl;
+        redirectionType = OneCrocodile;
+    }
+    else if(string(arguments[crocLocationIndex]) == ">>"){
+        cout << "TwoCroc" << endl;
 
-        close(1);
-        open(arguments[2],O_CREAT | O_RDWR);
-
-        commandToExecutre->execute();
-
-        close(1);
-        dup2(stdout_fd,1);
+        redirectionType = TwoCrocodile;
+    }
+    else{
+        redirectionType = Other;
     }
 
+    if (redirectionType == RedirectionType::Other){
+        cout << "Invalid arguments thing" << endl;
+        //TODO: real error message
+        return;
+    }
+
+    //so we can put std::cout back in FDT after we are done with redirection
+    int stdout_fd = dup(1);
+    perror("first dup  error");
+
+
+
+    //TODO: wrap everything here to check if system call succded
+    close(1);
+    perror("first close  error");
+
+
+    //Elad, I made this in a switch case becasue it's very readable for us
+    int fileToOpenIndex = crocLocationIndex + 1;
+    switch (redirectionType){
+        case OneCrocodile:
+            open(arguments[fileToOpenIndex],O_CREAT | O_WRONLY);
+            perror("one corocidle error");
+            break;
+        case TwoCrocodile:
+            open(arguments[fileToOpenIndex],O_CREAT | O_WRONLY | O_APPEND);
+            perror("two corocidle error");
+
+            break;
+        default:
+            cout << "if im here, something has gone terribly wrong.";
+            break;
+    }
+
+
+    commandToExecutre->execute();
+
+    close(1);
+    perror("second close  error");
+
+    dup2(stdout_fd,1);
+    perror("second dup  error");
+
+
+
+}
+
+
+
+
+/**
+ * This function recives the arguments char** from parseCmdLine and returns in which token a ceratin char is (like > or |)
+ * @param str string to find
+ * @param arguments cmdline, parsed
+ * @param numOfArgs many tokens are in there
+ * @return the index of the string. If it is not found, then -1 is returned
+ *
+ */
+int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs){
+    for (int i=0; i < numOfArgs; ++i){
+        if (string(arguments[i]) == str ){
+            return i;
+        }
+    }
+    //if failed
+    return -1;
+}
+
+
+/**
+ * return the first location of > or >>. If no crocidle, then returns -1
+ * @param arguments
+ * @param numberOfWords
+ * @return
+ */
+int getCrocLocation(char** arguments, int numberOfWords){
+    int index = findFirstCharInArgs(">", arguments, numberOfWords);
+    if (index != -1){
+        return index;
+    }
+    else{
+        index = findFirstCharInArgs(">>", arguments, numberOfWords);
+        if (index != -1){
+            return index;
+        }
+        else{
+            return -1;
+        }
+    }
 }
