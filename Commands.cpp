@@ -12,6 +12,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /*
 * Macro providing a “safe” way to invoke system calls
@@ -30,7 +33,7 @@ if( (syscall) == -1 ) {                            \
 #define STDIN_FDT 0
 #define STDOUT_FDT 1
 #define STDERROR_FDT 2
-
+#define SYSCALL_FAILED -1
 
 using namespace std;
 
@@ -45,6 +48,14 @@ using namespace std;
 #define FUNC_ENTRY()
 #define FUNC_EXIT()
 #endif
+
+
+
+
+
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
+/** ----------------------------------------------------------   helping function (string edit , etc..)    ----------------------------------------------------------  **/
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
 
 
 std::string _ltrim(const std::string& s)
@@ -145,6 +156,118 @@ string cutAfterChar(const char* cmd_line , char character){// return value not i
     }
     return str;
 }
+
+
+/**
+ * function recieves a char* that starts with - and removes it. Allocates memory for the new string.
+ * @param str
+ * @return
+ */
+char* removeMinusFromStartOfString(char *str) {
+    int len = strlen(str);
+    if (len == 0 || str[0] != '-') {
+        // Input string is empty or does not start with a dash
+        return NULL;
+    }
+    // Copy the characters after the first dash to a new string
+    char *result = new char[len];
+    strncpy(result, str + 1, len - 1);
+    result[len - 1] = '\0';
+    return result;
+}
+
+
+
+int convertStringToInt(char* str){
+    int temp;
+    try{
+        temp = stoi(string(str));
+    }
+    catch(std::exception& e){
+        cout << "something bad has happened my friend" << endl; //TODO: something real
+        return -1;
+    }
+    return temp;
+}
+
+
+int removeMinusFromStringAndReturnAsInt(char* str){
+    char* temp = removeMinusFromStartOfString(str);
+    if (temp == NULL){
+        return -1;
+    }
+    else{
+        int num = convertStringToInt(temp);
+        return num;
+    }
+}
+
+
+
+
+
+/**
+ * This function recives the arguments char** from parseCmdLine and returns in which token a ceratin char is (like > or |)
+ * @param str string to find
+ * @param arguments cmdline, parsed
+ * @param numOfArgs many tokens are in there
+ * @return the index of the string. If it is not found, then -1 is returned
+ *
+ */
+int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs){
+    for (int i=0; i < numOfArgs; ++i){
+        if (string(arguments[i]) == str ){
+            return i;
+        }
+    }
+    //if failed
+    return -1;
+}
+
+
+/**
+ * return the first location of > or >>. If no crocidle, then returns -1
+ * @param arguments
+ * @param numberOfWords
+ * @return
+ */
+int getCrocLocation(char** arguments, int numberOfWords){
+    int index = findFirstCharInArgs(">", arguments, numberOfWords);
+    if (index != -1){
+        return index;
+    }
+    else{
+        index = findFirstCharInArgs(">>", arguments, numberOfWords);
+        if (index != -1){
+            return index;
+        }
+        else{
+            return -1;
+        }
+    }
+}
+
+int getPipeLocation(char** arguments, int numberOfWords){
+    int index = findFirstCharInArgs("|", arguments, numberOfWords);
+    if (index != -1){
+        return index;
+    }
+    else{
+        index = findFirstCharInArgs("|&", arguments, numberOfWords);
+        if (index != -1){
+            return index;
+        }
+        else{
+            return -1;
+        }
+    }
+}
+
+
+
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
+/** ----------------------------------------------------------   smallShell implementation    ----------------------------------------------------------  **/
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
 
 
 
@@ -259,15 +382,75 @@ void SmallShell::reap() {
 
 
 
+BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
+
+    assert(cmd_line != nullptr);
+    //init annoying stuff for backward compability
+    char** arguments = new char*[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+
+    //deal with & case
+    char cmd_line_edit[COMMAND_ARGS_MAX_LENGTH];
+    strcpy(cmd_line_edit, cmd_line);
+    if(_isBackgroundComamnd(cmd_line)){
+        _removeBackgroundSign(cmd_line_edit);
+    }
+
+    string cmd_s = _trim(string(cmd_line_edit));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+
+    if (firstWord == "pid") {
+        return new ShowPidCommand(cmd_line_edit);
+    }
+    else if(firstWord == "showpid"){
+        return new GetCurrDirCommand(cmd_line);
+    }
+    else if(firstWord == "cd"){
+        return new ChangeDirCommand(cmd_line, arguments, previousPath);
+    }
+    else if(firstWord == "chprompt"){
+        return new ChPromtCommand(cmd_line, shellPromt);
+    }
+    else if(firstWord == "jobs"){
+        return new JobsCommand(cmd_line);
+    }
+    else if(firstWord == "fg"){
+        return new ForegroundCommand(cmd_line, &jobList );
+    }
+    else if(firstWord == "kill"){
+        return new KillCommand(cmd_line, &jobList);
+    }
+    else if(firstWord == "bg"){
+        return new BackgroundCommand(cmd_line, &jobList);
+    }
+    else if(firstWord == "quit"){
+        return new QuitCommand(cmd_line, &jobList);
+    }
+    else if(firstWord == "getfiletype"){
+        return new GetFileTypeCommand(cmd_line);
+    }
+    else{
+        return nullptr;
+    }
+}
 
 
 
 
 
 
-//This is where our code begins!
 
-//Command Thing
+
+
+
+
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
+/** ----------------------------------------------------------   commands Implementation    -------------------------------------------------------------------------  **/
+/** -----------------------------------------------------------------------------------------------------------------------------------------------------------------  **/
+
+
+
 Command::Command(const char *cmd_line) : cmd_line(cmd_line) {
 
 }
@@ -284,7 +467,7 @@ BuiltInCommand::BuiltInCommand(const char *cmd_line) : Command(cmd_line) {
 
 
 
-/** showpid command    */
+/**-------------------------------------------------- showpid command ----------------------------------------------------------   */
 
 ShowPidCommand::ShowPidCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
 
@@ -296,8 +479,8 @@ void ShowPidCommand::execute() {
 }
 
 
-/** pwd command      */
 
+/**-------------------------------------------------- pwd command  ----------------------------------------------------------   */
 
 GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
 
@@ -309,50 +492,10 @@ void GetCurrDirCommand::execute() {
     std::cout << "\n";
 }
 
-/**
- * function recieves a char* that starts with - and removes it. Allocates memory for the new string.
- * @param str
- * @return
- */
-char* removeMinusFromStartOfString(char *str) {
-    int len = strlen(str);
-    if (len == 0 || str[0] != '-') {
-        // Input string is empty or does not start with a dash
-        return NULL;
-    }
-    // Copy the characters after the first dash to a new string
-    char *result = new char[len];
-    strncpy(result, str + 1, len - 1);
-    result[len - 1] = '\0';
-    return result;
-}
 
 
 
-int convertStringToInt(char* str){
-    int temp;
-    try{
-        temp = stoi(string(str));
-    }
-    catch(std::exception& e){
-        cout << "something bad has happened my friend" << endl; //TODO: something real
-        return -1;
-    }
-    return temp;
-}
-
-
-int removeMinusFromStringAndReturnAsInt(char* str){
-    char* temp = removeMinusFromStartOfString(str);
-    if (temp == NULL){
-        return -1;
-    }
-    else{
-        int num = convertStringToInt(temp);
-        return num;
-    }
-}
-
+/**-------------------------------------------------- Quit command  ----------------------------------------------------------   */
 
 QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(cmd_line),jobs(jobs) {
 }
@@ -362,6 +505,7 @@ void QuitCommand::execute() {
     char** arguments= makeArgsArr(cmd_line);
     string str = arguments[0];
     if(str.compare("kill")==0){
+        cout << "sending SIGKILL signal to "<< smashy.getJoblist()->getNumOfJobs()<<" jobs:"<< endl;
         jobs->killAllJobs();
     }
     sleep(2);
@@ -369,13 +513,12 @@ void QuitCommand::execute() {
     exit(0);
 }
 
+
+
+/**-------------------------------------------------- Redirection command  ----------------------------------------------------------   */
+
 RedirectionCommand::RedirectionCommand(const char *cmd_line) : Command(cmd_line) {
-
 }
-
-
-
-
 
 void RedirectionCommand::execute() {
 
@@ -417,14 +560,13 @@ void RedirectionCommand::execute() {
 
     //so we can put std::cout back in FDT after we are done with redirection
     int stdout_fd = dup(1);
-    perror("first dup  error");
+    if(stdout_fd == SYSCALL_FAILED){
+        perror("first dup  error");
+    }
 
-
-
-    //TODO: wrap everything here to check if system call succded
-    close(1);
-    perror("first close  error");
-
+   if(close(1)== SYSCALL_FAILED){
+       perror("first close  error");
+   }
 
     int fileToOpenIndex = crocLocationIndex + 1;
     switch (redirectionType){
@@ -445,82 +587,24 @@ void RedirectionCommand::execute() {
 
     commandToExecutre->execute();
 
-    close(1);
-    perror("second close  error");
+    if(close(1)==SYSCALL_FAILED){
+        perror("second close  error");
+    }
 
-    dup2(stdout_fd,1);
-    perror("second dup  error");
+    if(dup2(stdout_fd,1) == SYSCALL_FAILED){
+        perror("second dup  error");
+    }
 
-
-
-    close(stdout_fd);
-    perror("third close error");
-
-
-
-
+    if(close(stdout_fd)==SYSCALL_FAILED){
+        perror("third close error");
+    }
 
 }
 
 
 
 
-/**
- * This function recives the arguments char** from parseCmdLine and returns in which token a ceratin char is (like > or |)
- * @param str string to find
- * @param arguments cmdline, parsed
- * @param numOfArgs many tokens are in there
- * @return the index of the string. If it is not found, then -1 is returned
- *
- */
-int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs){
-    for (int i=0; i < numOfArgs; ++i){
-        if (string(arguments[i]) == str ){
-            return i;
-        }
-    }
-    //if failed
-    return -1;
-}
-
-
-/**
- * return the first location of > or >>. If no crocidle, then returns -1
- * @param arguments
- * @param numberOfWords
- * @return
- */
-int getCrocLocation(char** arguments, int numberOfWords){
-    int index = findFirstCharInArgs(">", arguments, numberOfWords);
-    if (index != -1){
-        return index;
-    }
-    else{
-        index = findFirstCharInArgs(">>", arguments, numberOfWords);
-        if (index != -1){
-            return index;
-        }
-        else{
-            return -1;
-        }
-    }
-}
-
-int getPipeLocation(char** arguments, int numberOfWords){
-    int index = findFirstCharInArgs("|", arguments, numberOfWords);
-    if (index != -1){
-        return index;
-    }
-    else{
-        index = findFirstCharInArgs("|&", arguments, numberOfWords);
-        if (index != -1){
-            return index;
-        }
-        else{
-            return -1;
-        }
-    }
-}
+/**-------------------------------------------------- Pipe command  ----------------------------------------------------------   */
 
 PipeCommand::PipeCommand(const char *cmd_line) : Command(cmd_line)  {
 
@@ -693,58 +777,41 @@ void PipeCommand::execute() {
     }
 }
 
-BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
-
-    assert(cmd_line != nullptr);
-    //init annoying stuff for backward compability
-    char** arguments = new char*[COMMAND_MAX_ARGS];
-    int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
 
-    //deal with & case
-    char cmd_line_edit[COMMAND_ARGS_MAX_LENGTH];
-    strcpy(cmd_line_edit, cmd_line);
-    if(_isBackgroundComamnd(cmd_line)){
-        _removeBackgroundSign(cmd_line_edit);
-    }
+/**-------------------------------------------------- Get File Type command  ----------------------------------------------------------   */
 
-    string cmd_s = _trim(string(cmd_line_edit));
-    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-
-    if (firstWord == "pid") {
-        return new ShowPidCommand(cmd_line_edit);
-    }
-    else if(firstWord == "showpid"){
-        return new GetCurrDirCommand(cmd_line);
-    }
-    else if(firstWord == "cd"){
-        return new ChangeDirCommand(cmd_line, arguments, previousPath);
-    }
-    else if(firstWord == "chprompt"){
-        return new ChPromtCommand(cmd_line, shellPromt);
-    }
-    else if(firstWord == "jobs"){
-        return new JobsCommand(cmd_line);
-    }
-    else if(firstWord == "fg"){
-        return new ForegroundCommand(cmd_line, &jobList );
-    }
-    else if(firstWord == "kill"){
-        return new KillCommand(cmd_line, &jobList);
-    }
-    else if(firstWord == "bg"){
-        return new BackgroundCommand(cmd_line, &jobList);
-    }
-    else if(firstWord == "quit"){
-        return new QuitCommand(cmd_line, &jobList);
-    }
-    else{
-        return nullptr;
-    }
+GetFileTypeCommand::GetFileTypeCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
 }
 
-
-
-
-
-
+void GetFileTypeCommand::execute() {
+    auto& smashy = SmallShell::getInstance();
+    string cmd_s = _trim(string(cmd_line));
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+    if(arguments[2] != NULL){
+        cerr << "smash error: too many arguments" << std::endl;
+        return;
+    }
+    const char *path = arguments[1];
+    string pathStr =string (path);
+    struct stat fileStats;
+    if(stat(path,&fileStats)==SYSCALL_FAILED){
+        perror("stat function failed");
+        return;
+    }
+    const auto  fileSize =fileStats.st_size;
+    const auto fileType = fileStats.st_mode;
+    string strFileType;
+    switch (fileStats.st_mode & S_IFMT) {
+        case S_IFBLK:  strFileType = "block device";                 break;
+        case S_IFCHR:  strFileType = "character device";             break;
+        case S_IFDIR:  strFileType = "directory";                    break;
+        case S_IFIFO:  strFileType = "FIFO/pipe";                    break;
+        case S_IFLNK:  strFileType = "symlink";                      break;
+        case S_IFREG:  strFileType = "regular file";                 break;
+        case S_IFSOCK: strFileType = "socket";                       break;
+        default:       strFileType = "unknown?";                     break;
+    }
+    cout << pathStr <<"'s type is \""<< strFileType << "\" and take up "<<fileSize<<" bytes"<<endl;
+}

@@ -161,3 +161,7 @@ void JobsList::killAllJobs() {
       job->printJob_for_fg();
     }
 }
+
+int JobsList::getNumOfJobs() const {
+    this->jobsVector.size();
+}

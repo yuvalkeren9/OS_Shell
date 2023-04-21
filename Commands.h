@@ -171,6 +171,7 @@ class JobsList {
   int getLargestJobID() const;
   int getLargestStoppedJobID() const;
   bool isEmpty() const;
+  int getNumOfJobs() const;
   JobsList::JobEntry* getJobByPID(pid_t jobPID) const;
 
  private:
