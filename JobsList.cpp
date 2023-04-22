@@ -156,7 +156,7 @@ int JobsList::getLargestStoppedJobID() const {
 void JobsList::killAllJobs() {
     for(const JobEntry *job:jobsVector){
       pid_t pid_toKill= job->getJobPID();
-      kill(pid_toKill,SIGTERM);
+      kill(pid_toKill,SIGKILL);
       sleep(1);
       job->printJob_for_fg();
     }

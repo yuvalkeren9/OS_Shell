@@ -184,7 +184,7 @@ int convertStringToInt(char* str){
         temp = stoi(string(str));
     }
     catch(std::exception& e){
-        cout << "something bad has happened my friend" << endl; //TODO: something real
+//        cout << "something bad has happened my friend" << endl; //TODO: something real
         return -1;
     }
     return temp;
@@ -198,6 +198,9 @@ int removeMinusFromStringAndReturnAsInt(char* str){
     }
     else{
         int num = convertStringToInt(temp);
+        if (num == -1) { //error has occured
+            return -1;
+        }
         return num;
     }
 }
@@ -364,18 +367,15 @@ void SmallShell::reap() {
     while (true){
         pid_t pid = waitpid(-1, nullptr, WNOHANG);
         if (pid == 0){
-            cout << "no childs to kill" << endl;
             return;
         }
         else if ( pid == -1){
-            cout << "I have no kids.. I am so sad ):" << endl;
             return;
         }
         auto jobToRemove = jobList.getJobByPID(pid);
         if(jobToRemove == nullptr){
             return;
         }
-        cout << "I removed job " << jobToRemove->getJobID() << endl;
         jobList.removeJobById(jobToRemove->getJobID());
     }
 }
@@ -404,31 +404,34 @@ BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
         return new ShowPidCommand(cmd_line_edit);
     }
     else if(firstWord == "showpid"){
-        return new GetCurrDirCommand(cmd_line);
+        return new GetCurrDirCommand(cmd_line_edit);
     }
     else if(firstWord == "cd"){
-        return new ChangeDirCommand(cmd_line, arguments, previousPath);
+        return new ChangeDirCommand(cmd_line_edit, arguments, previousPath);
     }
     else if(firstWord == "chprompt"){
-        return new ChPromtCommand(cmd_line, shellPromt);
+        return new ChPromtCommand(cmd_line_edit, shellPromt);
     }
     else if(firstWord == "jobs"){
-        return new JobsCommand(cmd_line);
+        return new JobsCommand(cmd_line_edit);
     }
     else if(firstWord == "fg"){
-        return new ForegroundCommand(cmd_line, &jobList );
+        return new ForegroundCommand(cmd_line_edit, &jobList );
     }
     else if(firstWord == "kill"){
-        return new KillCommand(cmd_line, &jobList);
+        return new KillCommand(cmd_line_edit, &jobList);
     }
     else if(firstWord == "bg"){
-        return new BackgroundCommand(cmd_line, &jobList);
+        return new BackgroundCommand(cmd_line_edit, &jobList);
     }
     else if(firstWord == "quit"){
-        return new QuitCommand(cmd_line, &jobList);
+        return new QuitCommand(cmd_line_edit, &jobList);
     }
     else if(firstWord == "getfiletype"){
-        return new GetFileTypeCommand(cmd_line);
+        return new GetFileTypeCommand(cmd_line_edit);
+    }
+    else if(firstWord == "chmod"){
+        return new ChmodCommand(cmd_line_edit);
     }
     else{
         return nullptr;
@@ -540,12 +543,9 @@ void RedirectionCommand::execute() {
     enum RedirectionType {OneCrocodile, TwoCrocodile, Other};
     RedirectionType redirectionType;
     if (string(arguments[crocLocationIndex]) == ">"){
-        cout << "OneCroc" << endl;
         redirectionType = OneCrocodile;
     }
     else if(string(arguments[crocLocationIndex]) == ">>"){
-        cout << "TwoCroc" << endl;
-
         redirectionType = TwoCrocodile;
     }
     else{
@@ -561,23 +561,25 @@ void RedirectionCommand::execute() {
     //so we can put std::cout back in FDT after we are done with redirection
     int stdout_fd = dup(1);
     if(stdout_fd == SYSCALL_FAILED){
-        perror("first dup  error");
+        perror("smash error: dup failed");
     }
 
    if(close(1)== SYSCALL_FAILED){
-       perror("first close  error");
+       perror("smash error: close failed");
    }
 
     int fileToOpenIndex = crocLocationIndex + 1;
     switch (redirectionType){
         case OneCrocodile:
-            open(arguments[fileToOpenIndex],O_CREAT | O_RDWR, S_IRWXU);
-            perror("one corocidle error");
+            if(open(arguments[fileToOpenIndex],O_CREAT | O_RDWR, S_IRWXU) == SYSCALL_FAILED){
+                perror("smash error: open failed");
+            }
             break;
         case TwoCrocodile:
-            open(arguments[fileToOpenIndex],O_CREAT | O_RDWR | O_APPEND, S_IRWXU); //TODO: figure ou what positions to give
-            perror("two corocidle error");
-
+            if(open(arguments[fileToOpenIndex],O_CREAT | O_RDWR | O_APPEND, S_IRWXU) == SYSCALL_FAILED){
+                perror("smash error: open failed");
+            }
+            //TODO: figure ou what positions to give
             break;
         default:
             cout << "if im here, something has gone terribly wrong.";
@@ -735,7 +737,7 @@ void PipeCommand::execute() {
 
             break;
         case CerrPipe:
-            if( dup2(stderror_fd, STDERROR_FDT) == 1){
+            if( dup2(stderror_fd, STDERROR_FDT) == -1){
                 perror("smash error: dup2 failed");
                 return;
             }
@@ -790,14 +792,14 @@ void GetFileTypeCommand::execute() {
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
     if(arguments[2] != NULL){
-        cerr << "smash error: too many arguments" << std::endl;
+        cerr << "smash error: gettype: invalid arguments" << std::endl;
         return;
     }
     const char *path = arguments[1];
     string pathStr =string (path);
     struct stat fileStats;
     if(stat(path,&fileStats)==SYSCALL_FAILED){
-        perror("stat function failed");
+        perror("smash error: stat failed");
         return;
     }
     const auto  fileSize =fileStats.st_size;
@@ -813,5 +815,47 @@ void GetFileTypeCommand::execute() {
         case S_IFSOCK: strFileType = "socket";                       break;
         default:       strFileType = "unknown?";                     break;
     }
-    cout << pathStr <<"'s type is \""<< strFileType << "\" and take up "<<fileSize<<" bytes"<<endl;
+    cout << pathStr <<"'s type is \""<< strFileType << "\" and takes up "<<fileSize<<" bytes"<<endl;
 }
+
+ChmodCommand::ChmodCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
+
+}
+
+void ChmodCommand::execute() {
+    //constats declarations for chmod command
+
+    static const int mode_arg_index = 1;
+    static const int path_arg_index = 2;
+    static const int last_arg_index = 2;
+
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+    //checking validness
+    char* zero = arguments[0];
+    char* asd = arguments[1];
+    char* dfg = arguments[2];
+    char* asdsd = arguments[3];
+
+
+
+
+    if (arguments[last_arg_index + 1] != NULL){
+        cerr << "smash error: chmod: invalid arguments" << endl;
+        return;
+    }
+
+    int num_entered_by_user = convertStringToInt(arguments[mode_arg_index]);
+    if (num_entered_by_user == -1){  //error has occured
+        cerr << "smash error: chmod: invalid arguments" << endl;
+    }
+
+    //TODO: this fucntion cant revive some stuff' make sure to check on piaza (number lie 9 cant be converted)
+    mode_t mode = std::stoi(arguments[mode_arg_index], 0 ,8);
+    if(chmod(arguments[path_arg_index], mode) == -1){
+        perror("smash error: chmod failed");
+    }
+}
+
+

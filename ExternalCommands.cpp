@@ -33,14 +33,9 @@ void ExternalCommand::execute() {
     }
 
     int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
-//    char **function_args = new char *[numberOfWords];
-//    for (int i = 0; i < numberOfWords - 1; ++i) {
-//        function_args[i] = arguments[i + 1];
-//    }
-//    if (numberOfWords == 0) {
-//        function_args = NULL;
-//    }
-//    fflush(stdout);
+
+
+
     pid_t pid = fork();
     if (pid == 0) {                                                         //child
         setpgrp();
@@ -71,7 +66,6 @@ void ExternalCommand::execute() {
 
 
     else if( pid == -1){                                            //error
-        //TODO: throw error
         perror("smash error: fork failed");
     }
 
@@ -80,8 +74,6 @@ void ExternalCommand::execute() {
     else {                                                          //parnet
         if (isBackground){
             smashy.getJoblist()->addJob(cmd_line,pid,false);
-            cout <<cmd_line;
-            cout << "I am in the background!\n";
         }
         else {
 //            smashy.setExternalCommandInFgPointer(this);

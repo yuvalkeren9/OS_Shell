@@ -34,7 +34,7 @@ void ctrlCHandler(int sig_num) {
         return;
     }
 //    cout <<"Killing the child! sorry baby.." << endl;
-    kill(foregroundChildPID, SIGTERM);
+    kill(foregroundChildPID, SIGKILL);
 //    cout <<"The child is dead" << endl;
     wait(nullptr);
 }
