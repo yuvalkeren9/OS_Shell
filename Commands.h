@@ -142,6 +142,7 @@ class JobsList {
    string cmd_line;
    time_t* jobTime;
    bool stopped;
+   bool wasJobInForeground;
 
   public:
       JobEntry(int jobID, pid_t pid,string cmd_line , bool stopped);
@@ -153,6 +154,10 @@ class JobsList {
       std::string get_cmd_line() const;
       void updateJobStoppedStatus();
       bool isStopped() const;
+      bool getwasJobInForeground() const;
+      void setwasJobInForeground();
+      void setJobStoppedStatus(bool cond);
+
 
 
   };
@@ -166,6 +171,7 @@ class JobsList {
   void removeFinishedJobs();
   JobEntry * getJobById(int jobId);
   void removeJobById(int jobId);
+  void removeJobByIdFG(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
   int getLargestJobID() const;
@@ -173,15 +179,19 @@ class JobsList {
   bool isEmpty() const;
   int getNumOfJobs() const;
   JobsList::JobEntry* getJobByPID(pid_t jobPID) const;
+  JobsList::JobEntry* getJobInForeground() const;
+  void removeJobInForeground();
+
 
  private:
     int numOfJobs;
     std::vector<JobEntry*>  jobsVector ;
-  // TODO: Add extra methods or modify exisitng ones as needed
+    JobEntry* jobInForeground;
+    int jobInForegroundIndex;
+
 };
 
 class JobsCommand : public BuiltInCommand {
- // TODO: Add your data members
  public:
   JobsCommand(const char* cmd_line);
   virtual ~JobsCommand() {}

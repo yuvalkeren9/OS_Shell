@@ -17,7 +17,7 @@
 using namespace std;
 
 JobsList::JobEntry::JobEntry(int jobID, pid_t pid, string cmd_line , bool stopped): jobID(jobID), pid(pid), cmd_line(cmd_line),
-stopped(stopped)
+stopped(stopped), wasJobInForeground(false)
         {
     time_t* temptime = new ::time_t ;
     time(temptime);
@@ -69,11 +69,33 @@ bool JobsList::JobEntry::isStopped() const {
     return stopped;
 }
 
+bool JobsList::JobEntry::getwasJobInForeground() const {
+    return wasJobInForeground;
+}
 
-JobsList::JobsList():numOfJobs(0){
+void JobsList::JobEntry::setwasJobInForeground() {
+    wasJobInForeground = true;
+}
+
+
+JobsList::JobsList():numOfJobs(0), jobsVector(), jobInForeground(nullptr), jobInForegroundIndex(-1){   //made little change here
 }
 
 void JobsList::addJob(const char *cmd_line,pid_t pid, bool isStopped) {
+
+    //if there is a command that was in the back, and then brought to the front, put it back!
+    //return
+
+    if (jobInForeground != nullptr){
+        jobsVector.insert(jobsVector.begin()+jobInForegroundIndex,jobInForeground);
+        jobInForeground->setJobStoppedStatus(true);
+        jobInForeground = nullptr;
+        jobInForegroundIndex = -1;
+        return;
+    }
+
+
+
     int newJobID = getLargestJobID()+1;
     char *temp= new char[strlen(cmd_line)];
     strcpy(temp,cmd_line);
@@ -165,3 +187,44 @@ void JobsList::killAllJobs() {
 int JobsList::getNumOfJobs() const {
     this->jobsVector.size();
 }
+
+void JobsList::removeJobByIdFG(int jobId) {
+
+    int i=0;
+    for( JobEntry *job:jobsVector) {
+        if(job->getJobID()==jobId){   //there used to be a const here
+            jobInForeground = job;
+            jobInForegroundIndex = i;
+            this->jobsVector.erase(jobsVector.begin()+i);
+            break;
+        }
+        i++;
+    }
+    jobInForeground->setwasJobInForeground();
+    cout <<"my duck is cool" << endl;
+
+}
+
+JobsList::JobEntry *JobsList::getJobInForeground() const {
+    return jobInForeground;
+}
+
+void JobsList::removeJobInForeground() {
+    cout << "my name is maor edri" << endl;
+    int i=0;
+    int jobId = jobInForeground->getJobID();
+    for( JobEntry *job:jobsVector) {
+        if(job->getJobID()==jobId){   //there used to be a const here
+            jobInForeground = nullptr;
+            jobInForegroundIndex = -1;
+            this->jobsVector.erase(jobsVector.begin()+i);
+            break;
+        }
+        i++;
+    }
+}
+
+void JobsList::JobEntry::setJobStoppedStatus(bool cond){
+    stopped = cond;
+}
+

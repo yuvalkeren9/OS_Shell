@@ -374,8 +374,17 @@ void SmallShell::reap() {
         }
         auto jobToRemove = jobList.getJobByPID(pid);
         if(jobToRemove == nullptr){
+            cout << " i am in nullptr case" << endl;
             return;
         }
+        if (jobToRemove->getwasJobInForeground() && (jobList.getJobInForeground() != nullptr) ){
+            cout << " i am in good case case" << endl;
+
+            jobList.removeJobInForeground();
+            return;
+        }
+        cout << " i am in bad case" << endl;
+
         jobList.removeJobById(jobToRemove->getJobID());
     }
 }
