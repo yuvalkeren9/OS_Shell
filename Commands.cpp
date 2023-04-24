@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sched.h>
 
 /*
 * Macro providing a “safe” way to invoke system calls
@@ -184,7 +185,6 @@ int convertStringToInt(char* str){
         temp = stoi(string(str));
     }
     catch(std::exception& e){
-//        cout << "something bad has happened my friend" << endl; //TODO: something real
         return -1;
     }
     return temp;
@@ -432,6 +432,9 @@ BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
     }
     else if(firstWord == "chmod"){
         return new ChmodCommand(cmd_line_edit);
+    }
+    else if(firstWord == "setcore"){
+        return new SetcoreCommand(cmd_line_edit);
     }
     else{
         return nullptr;
@@ -795,6 +798,16 @@ void GetFileTypeCommand::execute() {
         cerr << "smash error: gettype: invalid arguments" << std::endl;
         return;
     }
+
+    if(arguments[1] == NULL){
+        cerr << "smash error: gettype: invalid arguments" << std::endl;
+        return;
+    }
+
+
+
+
+
     const char *path = arguments[1];
     string pathStr =string (path);
     struct stat fileStats;
@@ -832,16 +845,17 @@ void ChmodCommand::execute() {
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
 
-    //checking validness
-    char* zero = arguments[0];
-    char* asd = arguments[1];
-    char* dfg = arguments[2];
-    char* asdsd = arguments[3];
+
 
 
 
 
     if (arguments[last_arg_index + 1] != NULL){
+        cerr << "smash error: chmod: invalid arguments" << endl;
+        return;
+    }
+
+    if (arguments[last_arg_index] == NULL){
         cerr << "smash error: chmod: invalid arguments" << endl;
         return;
     }
@@ -855,6 +869,75 @@ void ChmodCommand::execute() {
     mode_t mode = std::stoi(arguments[mode_arg_index], 0 ,8);
     if(chmod(arguments[path_arg_index], mode) == -1){
         perror("smash error: chmod failed");
+    }
+}
+
+
+SetcoreCommand::SetcoreCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
+
+}
+
+void SetcoreCommand::execute() {
+    auto& smashy = SmallShell::getInstance();
+    char *arguements[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguements);
+
+    static const int jobIdIndex = 1;
+    static const int coreIndex = 2;
+    static const int lastArgIndex = 2;
+
+    if (arguements[lastArgIndex + 1] != NULL){
+        cerr << "smash error: setcore: invalid arguments" << endl;
+        return;
+    }
+
+    int temp;
+    try{
+        temp = stoi(string(arguements[jobIdIndex]));
+    }
+    catch(std::exception& e){
+        cerr << "smash error: setcore: invalid arguments" << endl;
+        return;
+    }
+    int jobId = temp;
+
+    try{
+        temp = stoi(string(arguements[coreIndex]));
+    }
+    catch(std::exception& e){
+        cerr << "smash error: setcore: invalid arguments" << endl;
+        return;
+    }
+    int coreNumber = temp;
+
+    long numOfTotalCores = sysconf(_SC_NPROCESSORS_CONF);
+    if (numOfTotalCores == SYSCALL_FAILED) {
+        perror("smash error: sysconf failed");
+        return;
+    }
+
+    if (coreNumber > numOfTotalCores ||  coreNumber < 0) {
+        cerr << "smash error: setcore: invalid core number" << endl;
+        return;
+    }
+
+
+    //get the job (including if it is even in the list
+    JobsList* jobList = smashy.getJoblist();
+    JobsList::JobEntry* jobEntry = jobList->getJobById(jobId);
+    if (jobEntry == nullptr){
+        cerr << "smash error: setcore: job-id "<< jobId <<" does not exist" << endl;
+        return;
+    }
+
+    pid_t pid = jobEntry->getJobPID();
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(coreNumber, &set);
+
+    if ((sched_setaffinity(pid, sizeof(set), &set)) == SYSCALL_FAILED) {
+        perror("smash error: sched_setaffinity failed");
+        return;
     }
 }
 
