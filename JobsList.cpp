@@ -12,6 +12,7 @@
 #include "Commands.h"
 #include <time.h>
 #include <ctime>
+#include <cassert>
 
 
 using namespace std;
@@ -67,6 +68,13 @@ void JobsList::JobEntry::updateJobStoppedStatus() {
 
 bool JobsList::JobEntry::isStopped() const {
     return stopped;
+}
+
+void JobsList::JobEntry::resetTime() {
+    delete jobTime;
+    time_t* temptime = new ::time_t ;
+    time(temptime);
+    jobTime=temptime;
 }
 
 
@@ -154,7 +162,7 @@ int JobsList::getLargestStoppedJobID() const {
 }
 
 void JobsList::killAllJobs() {
-    for(const JobEntry *job:jobsVector){
+    for(const JobEntry *job : jobsVector){
       pid_t pid_toKill= job->getJobPID();
       kill(pid_toKill,SIGKILL);
       sleep(1);
@@ -164,4 +172,15 @@ void JobsList::killAllJobs() {
 
 int JobsList::getNumOfJobs() const {
     this->jobsVector.size();
+}
+
+void JobsList::resetJobTime(pid_t pid) {
+    assert(pid >=0 );
+    for(JobEntry *job : jobsVector){
+        if( job->getJobPID() == pid){
+            job->resetTime();
+            return;
+        }
+    }
+    return;
 }

@@ -22,8 +22,14 @@ void ctrlZHandler(int sig_num) {
     string temp = smashy.get_fg_cmd_line();
     const char* cmd_line = (temp).c_str();
 
-    smashy.getJoblist()->addJob(cmd_line, foregroundChildPID, true); //usual suspect !!
-//    smashy.getExternalCommandInFgPointer()->getCommand()
+    JobsList* jobList = smashy.getJoblist();
+    if(jobList->getJobByPID(foregroundChildPID) == nullptr){
+        jobList->addJob(cmd_line, foregroundChildPID, true); //usual suspect !!
+    return;
+    }
+    else{
+        jobList->resetJobTime(foregroundChildPID);
+    }
 }
 
 void ctrlCHandler(int sig_num) {

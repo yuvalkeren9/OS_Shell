@@ -153,6 +153,7 @@ class JobsList {
       std::string get_cmd_line() const;
       void updateJobStoppedStatus();
       bool isStopped() const;
+      void resetTime();
 
 
   };
@@ -173,8 +174,10 @@ class JobsList {
   bool isEmpty() const;
   int getNumOfJobs() const;
   JobsList::JobEntry* getJobByPID(pid_t jobPID) const;
+  void resetJobTime(pid_t pid);
 
- private:
+
+private:
     int numOfJobs;
     std::vector<JobEntry*>  jobsVector ;
   // TODO: Add extra methods or modify exisitng ones as needed

@@ -158,7 +158,7 @@ void ForegroundCommand::execute() {
     jobEntry->printJob_for_fg();
     kill(pid, SIGCONT);
 
-    jobsList->removeJobById(jobId);
+//    jobsList->removeJobById(jobId);
 
     waitpid(pid, nullptr, WUNTRACED);
 }
