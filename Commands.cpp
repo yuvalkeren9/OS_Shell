@@ -374,17 +374,8 @@ void SmallShell::reap() {
         }
         auto jobToRemove = jobList.getJobByPID(pid);
         if(jobToRemove == nullptr){
-            cout << " i am in nullptr case" << endl;
             return;
         }
-        if (jobToRemove->getwasJobInForeground() && (jobList.getJobInForeground() != nullptr) ){
-            cout << " i am in good case case" << endl;
-
-            jobList.removeJobInForeground();
-            return;
-        }
-        cout << " i am in bad case" << endl;
-
         jobList.removeJobById(jobToRemove->getJobID());
     }
 }
@@ -872,9 +863,10 @@ void ChmodCommand::execute() {
     int num_entered_by_user = convertStringToInt(arguments[mode_arg_index]);
     if (num_entered_by_user == -1){  //error has occured
         cerr << "smash error: chmod: invalid arguments" << endl;
+        return;
     }
 
-    //TODO: this fucntion cant revive some stuff' make sure to check on piaza (number lie 9 cant be converted)
+    //TODO: this fucntion cant revive some stuff' make sure to check on piaza (number like 9 cant be converted to oct)
     mode_t mode = std::stoi(arguments[mode_arg_index], 0 ,8);
     if(chmod(arguments[path_arg_index], mode) == -1){
         perror("smash error: chmod failed");
