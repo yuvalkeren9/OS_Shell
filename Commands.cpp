@@ -481,7 +481,7 @@ ShowPidCommand::ShowPidCommand(const char *cmd_line) : BuiltInCommand(cmd_line) 
 
 
 void ShowPidCommand::execute() {
-    printf("smash pid is %d\n",getpid());
+    printf("smash pid is %d\n",getpid());   //getpid is always succsesfull
 }
 
 
@@ -494,8 +494,12 @@ GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line) : BuiltInCommand(cmd_
 
 void GetCurrDirCommand::execute() {
     char buffer[COMMAND_ARGS_MAX_LENGTH];
-    std::cout << getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
-    std::cout << "\n";
+    char* message = getcwd(buffer, COMMAND_ARGS_MAX_LENGTH);
+    if (message == NULL){
+        perror("smash error: getcwd failed");
+        return;
+    }
+    cout << message << endl;
 }
 
 

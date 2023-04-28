@@ -171,7 +171,7 @@ void JobsList::killAllJobs() {
 }
 
 int JobsList::getNumOfJobs() const {
-    this->jobsVector.size();
+    return this->jobsVector.size(); //elad yaloser
 }
 
 //yolo2

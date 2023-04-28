@@ -254,6 +254,18 @@ KillCommand::KillCommand(const char *cmd_line, JobsList *jobs) : BuiltInCommand(
 void KillCommand::execute() {
     char** arguments = makeArgsArr(cmd_line);
 
+
+    if (arguments[1] == NULL){                                         //not enough arguments
+        std::cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
+
+    if (arguments[2] != NULL){                                        //too many arguments
+        std::cerr << "smash error: kill: invalid arguments" << endl;
+        return;
+    }
+
+
     int signum = removeMinusFromStringAndReturnAsInt(arguments[0]);
     if (signum == -1){
         std::cerr << "smash error: kill: invalid arguments" << endl;
