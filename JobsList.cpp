@@ -36,7 +36,7 @@ void JobsList::JobEntry::printJob() const{
    cout << difference <<" sec";
     if(stopped)
     {
-        cout<< "(stopped)" ;
+        cout<<" (stopped)" ;
     }
     cout << endl;
 
@@ -58,7 +58,7 @@ std::string JobsList::JobEntry::get_cmd_line() const{
 }
 
 void JobsList::JobEntry::updateJobStoppedStatus() {
-    if(stopped)
+    if(stopped== true)
     {
     stopped= false;
     } else{
@@ -75,6 +75,7 @@ void JobsList::JobEntry::resetTime() {
     time_t* temptime = new ::time_t ;
     time(temptime);
     jobTime=temptime;
+    stopped = true; // the only case that the time need to be reset is the case that the process stopped
 }
 
 

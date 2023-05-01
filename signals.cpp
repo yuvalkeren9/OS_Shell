@@ -12,10 +12,10 @@ void ctrlZHandler(int sig_num) {
     auto& smashy = SmallShell::getInstance();
     pid_t foregroundChildPID = smashy.getForegroundCommandPID();
     if (foregroundChildPID == 0){
-        cout << "No child to stop.. moron" << endl;
+        cout << "No child to stop.. moron" << endl; //TODO: CHECK THE CORRECT PRINT ASKED
         return;
     }
-//    cout <<"Stopping the child!" << endl;
+    cout <<"Process "<< foregroundChildPID<<" was stopped"<< endl;
     kill(foregroundChildPID, SIGSTOP);
 
     //preperaing the cmd_line

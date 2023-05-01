@@ -158,9 +158,13 @@ void ForegroundCommand::execute() {
     jobEntry->printJob_for_fg();
     kill(pid, SIGCONT);
 
-//    jobsList->removeJobById(jobId);
+
 
     waitpid(pid, nullptr, WUNTRACED);
+    if(jobEntry->isStopped()==false){
+        jobsList->removeJobById(jobId);
+    }
+
 }
 
 
@@ -202,7 +206,7 @@ void BackgroundCommand::execute() {
     int temp;
 
     if (arguments[0] == NULL){
-        jobId = jobList->getLargestStoppedJobID();
+        jobId = jobList->getLargestStoppedJobID();// TODO: make it get Largest stopped job ID with & in cmd line
         if (jobId == 0){
             cerr << "smash error: bg: there is no stopped jobs to resume" << endl;
             delete[] arguments;
