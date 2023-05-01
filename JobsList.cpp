@@ -65,6 +65,10 @@ void JobsList::JobEntry::updateJobStoppedStatus() {
         stopped=true;
     }
 }
+void JobsList::JobEntry::setJobStoppedStatus(bool bol) {
+    stopped = bol;
+}
+
 
 bool JobsList::JobEntry::isStopped() const {
     return stopped;

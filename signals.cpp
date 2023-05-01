@@ -15,6 +15,7 @@ void ctrlZHandler(int sig_num) {
         cout << "No child to stop.. moron" << endl; //TODO: CHECK THE CORRECT PRINT ASKED
         return;
     }
+    smashy.updateForegroundCommandPID(0);
     cout <<"Process "<< foregroundChildPID<<" was stopped"<< endl;
     kill(foregroundChildPID, SIGSTOP);
 

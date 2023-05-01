@@ -152,6 +152,7 @@ class JobsList {
       pid_t getJobPID() const;
       std::string get_cmd_line() const;
       void updateJobStoppedStatus();
+      void setJobStoppedStatus(bool bol);
       bool isStopped() const;
       void resetTime();
 

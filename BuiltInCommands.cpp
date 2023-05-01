@@ -156,6 +156,7 @@ void ForegroundCommand::execute() {
     smashy.update_fg_cmd_line(meow);
 
     jobEntry->printJob_for_fg();
+    jobEntry->setJobStoppedStatus(false);
     kill(pid, SIGCONT);
 
 
