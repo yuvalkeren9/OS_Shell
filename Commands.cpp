@@ -104,6 +104,24 @@ bool isSpecialExternalCommand(const char* cmd_line){
 }
 
 
+bool isTimeoutCommand(const char* cmd_line){
+    assert(cmd_line != nullptr);
+    //annoying garbage
+    char** arguments = new char*[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+    string cmd_s = _trim(string(cmd_line));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+
+    delete[] arguments;  //maybe delete
+    if (firstWord == "timeout"){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+
 void _removeBackgroundSign(char* cmd_line) {
   const string str(cmd_line);
   // find last character other than spaces
@@ -179,7 +197,7 @@ char* removeMinusFromStartOfString(char *str) {
 
 
 
-int convertStringToInt(char* str){
+long convertStringToInt(char* str){
     int temp;
     try{
         temp = stoi(string(str));
@@ -376,6 +394,7 @@ void SmallShell::reap() {
         if(jobToRemove == nullptr){
             return;
         }
+        eraseTimeoutEntryByPid(pid);
         jobList.removeJobById(jobToRemove->getJobID());
     }
 }
@@ -436,8 +455,33 @@ BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
     else if(firstWord == "setcore"){
         return new SetcoreCommand(cmd_line_edit);
     }
+    else if(firstWord == "timeout"){
+        return new TimeoutCommand(cmd_line);
+    }
     else{
         return nullptr;
+    }
+}
+
+TimeoutEntry *SmallShell::getTimeoutEntryByPid(pid_t pid) const {
+    auto& smashy = SmallShell::getInstance();
+
+    for(TimeoutEntry* entry : smashy.timeoutEntryVector){
+        if (entry->pid ==   pid){
+            return entry;
+        }
+    }
+    return nullptr;   //if was not found
+}
+
+void SmallShell::eraseTimeoutEntryByPid(pid_t pid) {
+    auto& smashy = SmallShell::getInstance();
+    int i = 0;
+    for (TimeoutEntry* entry : smashy.timeoutEntryVector){
+        if (entry->pid == pid){
+            smashy.timeoutEntryVector.erase(smashy.timeoutEntryVector.begin() + i);
+        }
+        ++i;
     }
 }
 
@@ -947,3 +991,125 @@ void SetcoreCommand::execute() {
 }
 
 
+
+
+
+
+void TimeoutCommand::execute() {
+    auto& smashy = SmallShell::getInstance();
+    bool isBackground = _isBackgroundComamnd(cmd_line);
+    bool isSpecialCommand = isSpecialExternalCommand(cmd_line);
+
+    //edit the cmd_line
+    string temp = removeTimeoutAndFriends(cmd_line);
+    const char* cmd_line_edit_temp = temp.c_str();
+    char cmd_line_edit[COMMAND_ARGS_MAX_LENGTH];
+    strcpy(cmd_line_edit, cmd_line_edit_temp );
+
+    if (isBackground){
+        _removeBackgroundSign(cmd_line_edit);
+    }
+
+    char* arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
+
+
+    long timeOfAlarm = getTimeOfAlaram(cmd_line);
+    if (timeOfAlarm <= 0){
+        cerr << "smash error: timeout: invalid arguments" << endl; //maybe not neccesary
+        return;
+    }
+
+    // piaza said that built in can also work, so need to do that, and it also said we can assume that builtin will finish beofre, so no need to add to vector, or even fork
+    BuiltInCommand* builtInCommand = smashy.checkCmdForBuiltInCommand(cmd_line_edit);
+    if (builtInCommand != nullptr){    //someone ran timeout command with builtin for some reason.. wtf?
+        alarm(timeOfAlarm);
+        builtInCommand->execute();
+        delete builtInCommand;
+        return;
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {                                                         //child
+        setpgrp();
+        if (!isSpecialCommand){
+            if (execv(arguments[0], arguments) == -1){         //TODO: update the correct arguments
+                if (execvp(arguments[0],arguments)==-1)
+                {
+//                cout << "first arg = "<< arguments[0] << endl;
+//                cout << "second arg = "<< arguments[1] << endl;
+//                cout << "third arg = "<< arguments[2] << endl;
+                    perror("smash error: execv failed");
+                    exit(-1);
+                }
+            }
+        }
+        else{
+            char bashString[10] = {'/','b','i','n','/','b','a','s','h','\0'};  //this is sick. LOL
+            char bashFlagString[3] = {'-','c','\0'};
+            char* bashCommandString[4] = {bashString, bashFlagString, cmd_line_edit, NULL};
+
+            if(execv("/bin/bash",bashCommandString) == -1){     //run bash
+                perror("smash error: execv failed");
+                exit(-1);
+            };
+        }
+    }
+
+
+
+    else if( pid == -1){                                            //error
+        perror("smash error: fork failed");
+    }
+
+
+
+    else {                                                          //parent
+        alarm(timeOfAlarm); //todo perror?
+        smashy.timeoutEntryVector.push_back(new TimeoutEntry(pid, timeOfAlarm , cmd_line));
+        if (isBackground){
+            smashy.getJoblist()->addJob(cmd_line,pid,false);
+        }
+        else {
+            int status;
+            smashy.update_fg_cmd_line(cmd_line);
+            smashy.updateForegroundCommandPID(pid);
+            waitpid(pid, &status, WUNTRACED);
+            if (WIFSTOPPED(status) == false){     //child was terminated, either by signal or regular but was not stopped
+                smashy.eraseTimeoutEntryByPid(pid);
+            }
+            smashy.updateForegroundCommandPID(0);
+            smashy.update_fg_cmd_line("");  //maybe bug?
+        }
+    }
+
+
+}
+
+TimeoutCommand::TimeoutCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
+
+}
+
+
+
+string removeTimeoutAndFriends(const char* cmd_line){
+    char** arguments = new char*[COMMAND_MAX_ARGS];
+    int numOfArgs = _parseCommandLine(cmd_line, arguments);
+
+    //create the string
+    string str;
+    for (int i = 2; i < numOfArgs ; ++i){
+        str += arguments[i];
+        if (i == numOfArgs - 1){
+            continue;
+        }
+        str += " ";
+    }
+    return str;
+}
+
+long getTimeOfAlaram(const char* cmd_line){
+    char* arguments[COMMAND_MAX_ARGS];
+    _parseCommandLine(cmd_line, arguments);
+    return convertStringToInt(arguments[1]);
+}

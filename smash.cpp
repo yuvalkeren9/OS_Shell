@@ -17,6 +17,8 @@ int main(int argc, char* argv[]) {
     }
     //TODO: setup sig alarm handler
 
+    signal(SIGALRM, alarmHandler );   //TODO: sigaction  TODO: like the above
+
     SmallShell& smash = SmallShell::getInstance();
 
     while(true) {

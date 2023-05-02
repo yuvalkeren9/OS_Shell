@@ -19,6 +19,9 @@ std::string _trim(const std::string& s);
 int _parseCommandLine(const char* cmd_line, char** args);
 bool _isBackgroundComamnd(const char* cmd_line);
 bool isSpecialExternalCommand(const char* cmd_line);
+string removeTimeoutAndFriends(const char* cmd_line);
+
+bool isTimeoutCommand(const char* cmd_line);
 void _removeBackgroundSign(char* cmd_line);
 char** makeArgsArr(const char *cmd_line);
 string cutUntillChar(const char* toCut , char character);
@@ -26,8 +29,9 @@ string cutAfterChar(const char* cmd_line , char character);
 
 
 char* removeMinusFromStartOfString(char *str);
-int convertStringToInt(char* str);
+long convertStringToInt(char* str);
 int removeMinusFromStringAndReturnAsInt(char* str);
+long getTimeOfAlaram(const char* cmd_line);
 
 
 int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs);
@@ -131,6 +135,31 @@ public:
   void execute() override;
 };
 
+class TimeoutCommand : public BuiltInCommand {
+/* Bonus */
+// TODO: Add your data members
+public:
+    explicit TimeoutCommand(const char* cmd_line);
+    virtual ~TimeoutCommand() {}
+    void execute() override;
+};
+
+class TimeoutEntry{
+public:
+    pid_t pid;
+    long timeToRun;
+    string cmdString;
+    time_t* timeEntry;
+    TimeoutEntry(pid_t pid, long timeToRun, string cmdString) : pid(pid), timeToRun(timeToRun), cmdString(cmdString){
+            time_t* temptime = new ::time_t ;
+            time(temptime);
+            timeEntry = temptime;
+    }
+    ~TimeoutEntry(){
+        delete timeEntry;
+    }
+};
+
 
 class JobsList {
  public:
@@ -167,6 +196,7 @@ class JobsList {
   void removeFinishedJobs();
   JobEntry * getJobById(int jobId);
   void removeJobById(int jobId);
+  int removeJobByPID(int jobPID);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
   int getLargestJobID() const;
@@ -213,14 +243,7 @@ class BackgroundCommand : public BuiltInCommand {
   void execute() override;
 };
 
-class TimeoutCommand : public BuiltInCommand {
-/* Bonus */
-// TODO: Add your data members
- public:
-  explicit TimeoutCommand(const char* cmd_line);
-  virtual ~TimeoutCommand() {}
-  void execute() override;
-};
+
 
 class ChmodCommand : public BuiltInCommand {
   // TODO: Add your data members
@@ -264,7 +287,7 @@ class SmallShell {
     pid_t foregroundCommandPID;
     ExternalCommand* externalCommandInFgPointer;
     string ForeGround_cmd_line;
-  SmallShell();
+    SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
@@ -283,6 +306,10 @@ class SmallShell {
   std::string getPromt() const;
   void updateForegroundCommandPID(pid_t pid);
   pid_t getForegroundCommandPID() const;
+
+  std::vector<TimeoutEntry*> timeoutEntryVector;
+  TimeoutEntry* getTimeoutEntryByPid(pid_t pid) const;
+  void eraseTimeoutEntryByPid(pid_t pid);
 
   ExternalCommand* getExternalCommandInFgPointer() const;
   void setExternalCommandInFgPointer(ExternalCommand* ptr);

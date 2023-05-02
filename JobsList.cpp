@@ -148,6 +148,18 @@ void JobsList::removeJobById(int jobId) {
     }
 }
 
+int JobsList::removeJobByPID(int jobPID) {
+    int i=0;
+    for(const JobEntry *job:jobsVector) {
+        if(job->getJobPID()==jobPID){
+            this->jobsVector.erase(jobsVector.begin()+i);
+            return 0;
+        }
+        i++;
+    }
+    return -1;
+}
+
 int JobsList::getLargestStoppedJobID() const {
         int max =0;
         for(const JobEntry *job:jobsVector){
