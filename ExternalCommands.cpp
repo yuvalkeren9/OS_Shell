@@ -24,7 +24,7 @@ void ExternalCommand::execute() {
     char *arguments[COMMAND_MAX_ARGS];
     bool isBackground = _isBackgroundComamnd(cmd_line);
     bool isSpecialCommand = isSpecialExternalCommand(cmd_line);
-
+    bool isTimeout = isTimeoutCommand(cmd_line);
     char cmd_line_edit[COMMAND_ARGS_MAX_LENGTH];
     strcpy(cmd_line_edit, cmd_line);
 
