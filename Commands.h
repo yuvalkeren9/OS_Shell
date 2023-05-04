@@ -177,6 +177,7 @@ class JobsList {
       ~JobEntry();
       void printJob() const;
       void printJob_for_fg() const;
+      void printJobForKillAll() const;
       int getJobID() const;
       pid_t getJobPID() const;
       std::string get_cmd_line() const;

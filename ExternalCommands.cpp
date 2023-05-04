@@ -46,7 +46,7 @@ void ExternalCommand::execute() {
 //                cout << "first arg = "<< arguments[0] << endl;
 //                cout << "second arg = "<< arguments[1] << endl;
 //                cout << "third arg = "<< arguments[2] << endl;
-                    perror("smash error: execv failed");
+                    perror("smash error: execv failed third");
                     exit(-1);
                 }
             }
@@ -57,7 +57,7 @@ void ExternalCommand::execute() {
             char* bashCommandString[4] = {bashString, bashFlagString, cmd_line_edit, NULL};
 
             if(execv("/bin/bash",bashCommandString) == -1){     //run bash
-                perror("smash error: execv failed");
+                perror("smash error: execv failed fourth");
                 exit(-1);
             };
         }

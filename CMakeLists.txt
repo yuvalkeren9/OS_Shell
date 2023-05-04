@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(skeleton_smash)
+project(smash)
 
 set(CMAKE_CXX_STANDARD 14)
 

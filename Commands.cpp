@@ -392,6 +392,7 @@ void SmallShell::reap() {
         }
         auto jobToRemove = jobList.getJobByPID(pid);
         if(jobToRemove == nullptr){
+
             return;
         }
         eraseTimeoutEntryByPid(pid);
@@ -556,11 +557,17 @@ QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(c
 
 void QuitCommand::execute() {
     SmallShell& smashy = SmallShell::getInstance();
-    char** arguments= makeArgsArr(cmd_line);
-    string str = arguments[0];
-    if(str.compare("kill")==0){
-        cout << "sending SIGKILL signal to "<< smashy.getJoblist()->getNumOfJobs()<<" jobs:"<< endl;
-        jobs->killAllJobs();
+//    char** arguments= makeArgsArr(cmd_line);
+//    string str = arguments[0];
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+    if (arguments[1] != NULL){
+        string str(arguments[1]);
+        if(str.compare("kill")==0) {
+            cout << "smash: sending SIGKILL signal to " << smashy.getJoblist()->getNumOfJobs() << " jobs:" << endl;
+            jobs->killAllJobs();
+        }
     }
     sleep(2);
     smashy.reap();
@@ -1039,7 +1046,7 @@ void TimeoutCommand::execute() {
 //                cout << "first arg = "<< arguments[0] << endl;
 //                cout << "second arg = "<< arguments[1] << endl;
 //                cout << "third arg = "<< arguments[2] << endl;
-                    perror("smash error: execv failed");
+                    perror("smash error: execv failed first");
                     exit(-1);
                 }
             }
@@ -1050,7 +1057,7 @@ void TimeoutCommand::execute() {
             char* bashCommandString[4] = {bashString, bashFlagString, cmd_line_edit, NULL};
 
             if(execv("/bin/bash",bashCommandString) == -1){     //run bash
-                perror("smash error: execv failed");
+                perror("smash error: execv failed second");
                 exit(-1);
             };
         }

@@ -216,6 +216,7 @@ void BackgroundCommand::execute() {
     else if(arguments[1] != NULL){
         cerr << "smash error: bg: invalid arguments" << endl;
         delete[] arguments;
+        return;
     }
 
     else{
@@ -236,6 +237,10 @@ void BackgroundCommand::execute() {
 
     if(jobEntry == nullptr){
         cerr << "smash error: bg: job-id " << jobId << " does not exist" << endl;
+        return;
+    }
+    if (jobEntry->isStopped() == false){
+        cerr << "smash error: bg: job-id " << jobEntry->getJobID() << " is already running in the background" << endl;
         return;
     }
 
