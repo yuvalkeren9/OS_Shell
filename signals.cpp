@@ -57,7 +57,7 @@ void ctrlCHandler(int sig_num) {
 }
 
 void alarmHandler(int sig_num) {
-    cout << "got an alarm" << endl;
+    cout << "smash: got an alarm" << endl;
     auto& smashy = SmallShell::getInstance();
     smashy.reap();
 
@@ -82,6 +82,7 @@ void alarmHandler(int sig_num) {
                 smashy.updateForegroundCommandPID(0);
                 smashy.update_fg_cmd_line("");
             }
+            continue;   // i needs to stay in place because of the deletion
         }
         ++i;
     }

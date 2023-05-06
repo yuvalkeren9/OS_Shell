@@ -671,20 +671,20 @@ void RedirectionCommand::execute() {
    }
    if (fd_of_file == SYSCALL_FAILED){
        if(dup2(stdout_fd,1) == SYSCALL_FAILED){  //return to previous state
-           perror("second dup  error");
+           perror("smash error: dup2 failed");
        }
        return;
    }
 
     if(dup2(fd_of_file,1) == SYSCALL_FAILED){
-        perror("meow dup  error");
+        perror("smash error: dup2 failed");
     }
 
     commandToExecutre->execute();
 
 
     if(dup2(stdout_fd,1) == SYSCALL_FAILED){
-        perror("second dup  error");
+        perror("smash error: dup2 failed");
     }
 
 }
@@ -860,7 +860,7 @@ void PipeCommand::execute() {
 
 
     if(close(my_pipe[0]) == -1){
-        perror("smash error12345: close failed");
+        perror("smash error: close failed");
         return;
     }
 }
@@ -1035,6 +1035,14 @@ void TimeoutCommand::execute() {
     bool isBackground = _isBackgroundComamnd(cmd_line);
     bool isSpecialCommand = isSpecialExternalCommand(cmd_line);
 
+
+    char* checkForSecondArg[COMMAND_MAX_ARGS];
+    _parseCommandLine(cmd_line, checkForSecondArg);
+    if (checkForSecondArg[2] == NULL ){
+        cerr << "smash error: timeout: invalid arguments" << endl; //maybe not neccesary
+        return;
+    }
+
     //edit the cmd_line
     string temp = removeTimeoutAndFriends(cmd_line);
     const char* cmd_line_edit_temp = temp.c_str();
@@ -1049,11 +1057,14 @@ void TimeoutCommand::execute() {
     int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
 
 
+
     long timeOfAlarm = getTimeOfAlaram(cmd_line);
     if (timeOfAlarm <= 0){
         cerr << "smash error: timeout: invalid arguments" << endl; //maybe not neccesary
         return;
     }
+
+
 
     // piaza said that built in can also work, so need to do that, and it also said we can assume that builtin will finish beofre, so no need to add to vector, or even fork
     BuiltInCommand* builtInCommand = smashy.checkCmdForBuiltInCommand(cmd_line_edit);
@@ -1071,10 +1082,9 @@ void TimeoutCommand::execute() {
             if (execv(arguments[0], arguments) == -1){         //TODO: update the correct arguments
                 if (execvp(arguments[0],arguments)==-1)
                 {
-//                cout << "first arg = "<< arguments[0] << endl;
-//                cout << "second arg = "<< arguments[1] << endl;
-//                cout << "third arg = "<< arguments[2] << endl;
-                    perror("smash error: execv failed first");
+//                    perror("smash error: execv failed");
+                    perror(cmd_line);  //TODO: change this motherfucker back to the above line
+
                     exit(-1);
                 }
             }
@@ -1085,7 +1095,7 @@ void TimeoutCommand::execute() {
             char* bashCommandString[4] = {bashString, bashFlagString, cmd_line_edit, NULL};
 
             if(execv("/bin/bash",bashCommandString) == -1){     //run bash
-                perror("smash error: execv failed second");
+                perror("smash error: execv failed");
                 exit(-1);
             };
         }

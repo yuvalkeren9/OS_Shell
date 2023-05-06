@@ -29,14 +29,13 @@ JobsList::JobEntry::~JobEntry(){
 }
 
 void JobsList::JobEntry::printJob() const{
-    cout<< "[" << jobID << "] "<< cmd_line  << " : "<< pid << " ";
-  //  cout << std::ctime(jobTime);
+    cout<< "[" << jobID << "] " << cmd_line  << " : " << pid << " ";
     time_t now = time(nullptr);
     double difference = difftime(now, *jobTime);
-   cout << difference <<" secs";
+    cout << difference << " secs";
     if(stopped)
     {
-        cout<<" (stopped)" ;
+        cout <<" (stopped)";
     }
     cout << endl;
 

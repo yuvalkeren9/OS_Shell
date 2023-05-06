@@ -24,7 +24,7 @@ ChangeDirCommand::ChangeDirCommand(const char *cmd_line, char **plastPwd, char*&
 
 void ChangeDirCommand::execute() {
     if(plastPwd[2] != NULL){
-        cerr << "smash error: too many arguments" << std::endl;
+        cerr << "smash error: cd: too many arguments" << std::endl;
         return;
     }
     char buffer[COMMAND_ARGS_MAX_LENGTH];
@@ -44,7 +44,7 @@ void ChangeDirCommand::execute() {
                 previous = temp;
             }
             else{
-                perror("smash error: cd failed");
+                perror("smash error: chdir failed");
             }
 
         }
@@ -57,7 +57,7 @@ void ChangeDirCommand::execute() {
             previous = temp;
         }
         else {
-            perror("smash error: cd failed");
+            perror("smash error: chdir failed");
             delete temp;
         }
     }

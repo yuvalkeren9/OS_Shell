@@ -17,7 +17,17 @@ int main(int argc, char* argv[]) {
     }
     //TODO: setup sig alarm handler
 
-    signal(SIGALRM, alarmHandler );   //TODO: sigaction  TODO: like the above
+//    sigaction(SIGALRM, alarmHandler );   //TODO: sigaction  TODO: like the above
+
+    struct sigaction sa;
+    sa.sa_handler = alarmHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+
+    if (sigaction(SIGALRM, &sa, NULL) == -1) {
+        perror("smash error: sigaction failed");
+        exit(-1);
+    }
 
     SmallShell& smash = SmallShell::getInstance();
 
