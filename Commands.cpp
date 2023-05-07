@@ -878,12 +878,12 @@ void GetFileTypeCommand::execute() {
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
     if(arguments[2] != NULL){
-        cerr << "smash error: gettype: invalid arguments" << std::endl;
+        cerr << "smash error: getfiletype: invalid arguments" << std::endl;
         return;
     }
 
     if(arguments[1] == NULL){
-        cerr << "smash error: gettype: invalid arguments" << std::endl;
+        cerr << "smash error: getfiletype: invalid arguments" << std::endl;
         return;
     }
 
