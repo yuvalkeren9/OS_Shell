@@ -16,7 +16,7 @@ void ctrlZHandler(int sig_num) {
         return;
     }
     smashy.updateForegroundCommandPID(0);
-    cout <<"Process "<< foregroundChildPID<<" was stopped"<< endl;
+    cout <<"smash: process "<< foregroundChildPID<<" was stopped"<< endl;
     kill(foregroundChildPID, SIGSTOP);
 
     //preperaing the cmd_line
@@ -49,15 +49,15 @@ void ctrlCHandler(int sig_num) {
     cout << "smash: process "<< foregroundChildPID <<" was killed" << endl;
 
     //clean up
-//    JobsList* jobList = smashy.getJoblist();
-//    jobList->removeJobByPID(foregroundChildPID);
+    JobsList* jobList = smashy.getJoblist();
+    jobList->removeJobByPID(foregroundChildPID);
     smashy.updateForegroundCommandPID(0);
     smashy.update_fg_cmd_line("");
 //    wait(nullptr);
 }
 
 void alarmHandler(int sig_num) {
-    cout << "got an alarm" << endl;
+    cout << "smash: got an alarm" << endl;
     auto& smashy = SmallShell::getInstance();
     smashy.reap();
 
@@ -82,6 +82,7 @@ void alarmHandler(int sig_num) {
                 smashy.updateForegroundCommandPID(0);
                 smashy.update_fg_cmd_line("");
             }
+            continue;   // i needs to stay in place because of the deletion
         }
         ++i;
     }

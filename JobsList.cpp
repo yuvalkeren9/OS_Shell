@@ -29,20 +29,23 @@ JobsList::JobEntry::~JobEntry(){
 }
 
 void JobsList::JobEntry::printJob() const{
-    cout<< "[" << jobID << "] "<< cmd_line  << " "<< pid << " ";
-  //  cout << std::ctime(jobTime);
+    cout<< "[" << jobID << "] " << cmd_line  << " : " << pid << " ";
     time_t now = time(nullptr);
     double difference = difftime(now, *jobTime);
-   cout << difference <<" sec";
+    cout << difference << " secs";
     if(stopped)
     {
-        cout<<" (stopped)" ;
+        cout <<" (stopped)";
     }
     cout << endl;
 
 }
 void JobsList::JobEntry::printJob_for_fg() const{
-    cout<< cmd_line  << " : "<< pid << "\n";
+    cout<< cmd_line  << " : "<< pid << endl;
+}
+
+void JobsList::JobEntry::printJobForKillAll() const{
+    cout << pid << ": " << cmd_line << endl;
 }
  int JobsList::JobEntry::getJobID() const {
     return jobID;
@@ -183,7 +186,7 @@ void JobsList::killAllJobs() {
       pid_t pid_toKill= job->getJobPID();
       kill(pid_toKill,SIGKILL);
       sleep(1);
-      job->printJob_for_fg();
+      job->printJobForKillAll();
     }
 }
 

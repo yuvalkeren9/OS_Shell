@@ -26,6 +26,7 @@ void _removeBackgroundSign(char* cmd_line);
 char** makeArgsArr(const char *cmd_line);
 string cutUntillChar(const char* toCut , char character);
 string cutAfterChar(const char* cmd_line , char character);
+string cutAfterChar2(const char* cmd_line , char character);
 
 
 char* removeMinusFromStartOfString(char *str);
@@ -37,6 +38,7 @@ long getTimeOfAlaram(const char* cmd_line);
 int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs);
 int getCrocLocation(char** arguments, int numberOfWords);
 int getPipeLocation(char** arguments, int numberOfWords);
+int checkCrocType(const string& cmd_line);
 
 
 
@@ -177,6 +179,7 @@ class JobsList {
       ~JobEntry();
       void printJob() const;
       void printJob_for_fg() const;
+      void printJobForKillAll() const;
       int getJobID() const;
       pid_t getJobPID() const;
       std::string get_cmd_line() const;

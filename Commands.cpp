@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <sched.h>
 
+
 /*
 * Macro providing a “safe” way to invoke system calls
 */
@@ -176,6 +177,19 @@ string cutAfterChar(const char* cmd_line , char character){// return value not i
     return str;
 }
 
+string cutAfterChar2(const char* cmd_line , char character){// like cutAfterChar, but searches from the end
+    string str;
+    int firstAppearIndex = (string(cmd_line).find_last_of(character));
+    if(firstAppearIndex!=string(cmd_line).length())
+    {
+        firstAppearIndex++;
+    }
+    for (int i = 0; i < strlen(cmd_line)-firstAppearIndex; ++i) {
+        str += cmd_line[i + firstAppearIndex];
+    }
+    return str;
+}
+
 
 /**
  * function recieves a char* that starts with - and removes it. Allocates memory for the new string.
@@ -237,7 +251,7 @@ int removeMinusFromStringAndReturnAsInt(char* str){
  */
 int findFirstCharInArgs(const string& str, char** arguments, int numOfArgs){
     for (int i=0; i < numOfArgs; ++i){
-        if (string(arguments[i]) == str ){
+        if (string(arguments[i]).find(str) != string::npos ){
             return i;
         }
     }
@@ -392,6 +406,7 @@ void SmallShell::reap() {
         }
         auto jobToRemove = jobList.getJobByPID(pid);
         if(jobToRemove == nullptr){
+
             return;
         }
         eraseTimeoutEntryByPid(pid);
@@ -419,10 +434,10 @@ BuiltInCommand* SmallShell::checkCmdForBuiltInCommand(const char* cmd_line){
     string cmd_s = _trim(string(cmd_line_edit));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
 
-    if (firstWord == "pid") {
+    if (firstWord == "showpid") {
         return new ShowPidCommand(cmd_line_edit);
     }
-    else if(firstWord == "showpid"){
+    else if(firstWord == "pwd"){
         return new GetCurrDirCommand(cmd_line_edit);
     }
     else if(firstWord == "cd"){
@@ -525,7 +540,7 @@ ShowPidCommand::ShowPidCommand(const char *cmd_line) : BuiltInCommand(cmd_line) 
 
 
 void ShowPidCommand::execute() {
-    printf("smash pid is %d\n",getpid());   //getpid is always succsesfull
+    cout <<"smash pid is "<< getpid() << endl;   //getpid is always succsesfull
 }
 
 
@@ -556,13 +571,19 @@ QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs): BuiltInCommand(c
 
 void QuitCommand::execute() {
     SmallShell& smashy = SmallShell::getInstance();
-    char** arguments= makeArgsArr(cmd_line);
-    string str = arguments[0];
-    if(str.compare("kill")==0){
-        cout << "sending SIGKILL signal to "<< smashy.getJoblist()->getNumOfJobs()<<" jobs:"<< endl;
-        jobs->killAllJobs();
+//    char** arguments= makeArgsArr(cmd_line);
+//    string str = arguments[0];
+    char *arguments[COMMAND_MAX_ARGS];
+    int numberOfWords = _parseCommandLine(cmd_line, arguments);
+
+    if (arguments[1] != NULL){
+        string str(arguments[1]);
+        if(str.compare("kill")==0) {
+            cout << "smash: sending SIGKILL signal to " << smashy.getJoblist()->getNumOfJobs() << " jobs:" << endl;
+            jobs->killAllJobs();
+        }
     }
-    sleep(2);
+    sleep(1);
     smashy.reap();
     exit(0);
 }
@@ -588,21 +609,26 @@ void RedirectionCommand::execute() {
 
     string meow1 = cutUntillChar(cmd_line,'>');
     const char * cuttedCommand = meow1.c_str();
+
     auto commandToExecutre = smashy.CreateCommand(cuttedCommand);
+
+    int crocType = checkCrocType(cmd_line);
+
 
 
     enum RedirectionType {OneCrocodile, TwoCrocodile, Other};
     RedirectionType redirectionType;
-    if (string(arguments[crocLocationIndex]) == ">"){
-        redirectionType = OneCrocodile;
+    switch (crocType){
+        case 1:    //"<"
+            redirectionType = OneCrocodile;
+            break;
+        case 2:    //">>"
+            redirectionType = TwoCrocodile;
+            break;
+        default:
+            redirectionType = Other;
+            break;
     }
-    else if(string(arguments[crocLocationIndex]) == ">>"){
-        redirectionType = TwoCrocodile;
-    }
-    else{
-        redirectionType = Other;
-    }
-
     if (redirectionType == RedirectionType::Other){
         cout << "Invalid arguments thing" << endl;
         //TODO: real error message
@@ -615,19 +641,26 @@ void RedirectionCommand::execute() {
         perror("smash error: dup failed");
     }
 
-   if(close(1)== SYSCALL_FAILED){
-       perror("smash error: close failed");
-   }
 
-    int fileToOpenIndex = crocLocationIndex + 1;
-    switch (redirectionType){
+   int fileToOpenIndex = crocLocationIndex + 1;
+   int fd_of_file = 0;
+
+    string temp = cutAfterChar2(cmd_line, '>');
+    temp = _trim(temp);
+    const char* cmd_line_after_redirection_letter = temp.c_str();
+
+   switch (redirectionType){
         case OneCrocodile:
-            if(open(arguments[fileToOpenIndex],O_CREAT | O_RDWR, S_IRWXU) == SYSCALL_FAILED){
+           fd_of_file = open(cmd_line_after_redirection_letter,O_CREAT | O_RDWR |O_TRUNC,  S_IRUSR | S_IWUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+
+            if( fd_of_file == SYSCALL_FAILED){
                 perror("smash error: open failed");
             }
             break;
         case TwoCrocodile:
-            if(open(arguments[fileToOpenIndex],O_CREAT | O_RDWR | O_APPEND, S_IRWXU) == SYSCALL_FAILED){
+            fd_of_file = open(cmd_line_after_redirection_letter,O_CREAT | O_RDWR | O_APPEND,  S_IRUSR | S_IWUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+
+            if (fd_of_file == SYSCALL_FAILED){
                 perror("smash error: open failed");
             }
             //TODO: figure ou what positions to give
@@ -635,21 +668,23 @@ void RedirectionCommand::execute() {
         default:
             cout << "if im here, something has gone terribly wrong.";
             break;
-    }
+   }
+   if (fd_of_file == SYSCALL_FAILED){
+       if(dup2(stdout_fd,1) == SYSCALL_FAILED){  //return to previous state
+           perror("smash error: dup2 failed");
+       }
+       return;
+   }
 
+    if(dup2(fd_of_file,1) == SYSCALL_FAILED){
+        perror("smash error: dup2 failed");
+    }
 
     commandToExecutre->execute();
 
-    if(close(1)==SYSCALL_FAILED){
-        perror("second close  error");
-    }
 
     if(dup2(stdout_fd,1) == SYSCALL_FAILED){
-        perror("second dup  error");
-    }
-
-    if(close(stdout_fd)==SYSCALL_FAILED){
-        perror("third close error");
+        perror("smash error: dup2 failed");
     }
 
 }
@@ -710,7 +745,7 @@ void PipeCommand::execute() {
         letter = '&';
     }
     const char* cmd_lineasfasf = cmd_line;
-    string temp2 = cutAfterChar(cmd_lineasfasf, letter);
+    string temp2 = cutAfterChar(cmd_lineasfasf, letter); //TODO: check here for a bug - maybe check 'last of"?
     const char * cuttedCommand2 = temp2.c_str();
 
     auto secondCommand = smashy.CreateCommand(cuttedCommand2);
@@ -825,7 +860,7 @@ void PipeCommand::execute() {
 
 
     if(close(my_pipe[0]) == -1){
-        perror("smash error12345: close failed");
+        perror("smash error: close failed");
         return;
     }
 }
@@ -1000,6 +1035,14 @@ void TimeoutCommand::execute() {
     bool isBackground = _isBackgroundComamnd(cmd_line);
     bool isSpecialCommand = isSpecialExternalCommand(cmd_line);
 
+
+    char* checkForSecondArg[COMMAND_MAX_ARGS];
+    _parseCommandLine(cmd_line, checkForSecondArg);
+    if (checkForSecondArg[2] == NULL ){
+        cerr << "smash error: timeout: invalid arguments" << endl; //maybe not neccesary
+        return;
+    }
+
     //edit the cmd_line
     string temp = removeTimeoutAndFriends(cmd_line);
     const char* cmd_line_edit_temp = temp.c_str();
@@ -1014,11 +1057,14 @@ void TimeoutCommand::execute() {
     int numberOfWords = _parseCommandLine(cmd_line_edit, arguments);
 
 
+
     long timeOfAlarm = getTimeOfAlaram(cmd_line);
     if (timeOfAlarm <= 0){
         cerr << "smash error: timeout: invalid arguments" << endl; //maybe not neccesary
         return;
     }
+
+
 
     // piaza said that built in can also work, so need to do that, and it also said we can assume that builtin will finish beofre, so no need to add to vector, or even fork
     BuiltInCommand* builtInCommand = smashy.checkCmdForBuiltInCommand(cmd_line_edit);
@@ -1036,10 +1082,9 @@ void TimeoutCommand::execute() {
             if (execv(arguments[0], arguments) == -1){         //TODO: update the correct arguments
                 if (execvp(arguments[0],arguments)==-1)
                 {
-//                cout << "first arg = "<< arguments[0] << endl;
-//                cout << "second arg = "<< arguments[1] << endl;
-//                cout << "third arg = "<< arguments[2] << endl;
-                    perror("smash error: execv failed");
+//                    perror("smash error: execv failed");
+                    perror(cmd_line);  //TODO: change this motherfucker back to the above line
+
                     exit(-1);
                 }
             }
@@ -1112,4 +1157,17 @@ long getTimeOfAlaram(const char* cmd_line){
     char* arguments[COMMAND_MAX_ARGS];
     _parseCommandLine(cmd_line, arguments);
     return convertStringToInt(arguments[1]);
+}
+
+
+int checkCrocType(const string& cmd_line){
+    if ( cmd_line.find(">>") != string::npos ){
+        return 2;
+    }
+    else if (cmd_line.find('>') != string::npos ){
+        return 1;
+    }
+    else{
+        return -1;
+    }
 }

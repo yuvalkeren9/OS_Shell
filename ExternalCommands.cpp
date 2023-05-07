@@ -43,9 +43,6 @@ void ExternalCommand::execute() {
             if (execv(arguments[0], arguments) == -1){
                 if (execvp(arguments[0],arguments)==-1)
                 {
-//                cout << "first arg = "<< arguments[0] << endl;
-//                cout << "second arg = "<< arguments[1] << endl;
-//                cout << "third arg = "<< arguments[2] << endl;
                     perror("smash error: execv failed");
                     exit(-1);
                 }
