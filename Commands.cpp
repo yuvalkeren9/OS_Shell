@@ -874,19 +874,20 @@ GetFileTypeCommand::GetFileTypeCommand(const char *cmd_line) : BuiltInCommand(cm
 
 void GetFileTypeCommand::execute() {
     auto& smashy = SmallShell::getInstance();
-    string cmd_s = _trim(string(cmd_line));
+    // string cmd_s = _trim(string(cmd_line));//  made a bug for some reason
+    static const int last_arg_index = 1;
     char *arguments[COMMAND_MAX_ARGS];
-    int numberOfWords = _parseCommandLine(cmd_line, arguments);
-    if(arguments[2] != NULL){
+    // int numberOfWords = //maybe this made the bug, who knows
+    _parseCommandLine(cmd_line, arguments);
+    if(arguments[last_arg_index+1] != NULL){
         cerr << "smash error: getfiletype: invalid arguments" << std::endl;
         return;
     }
 
-    if(arguments[1] == NULL){
+    if(arguments[last_arg_index] == NULL){
         cerr << "smash error: getfiletype: invalid arguments" << std::endl;
         return;
     }
-
 
 
 
@@ -896,6 +897,7 @@ void GetFileTypeCommand::execute() {
     struct stat fileStats;
     if(stat(path,&fileStats)==SYSCALL_FAILED){
         perror("smash error: stat failed");
+        // cerr << "smash error: getfiletype: invalid arguments" << std::endl;
         return;
     }
     const auto  fileSize =fileStats.st_size;
@@ -914,6 +916,8 @@ void GetFileTypeCommand::execute() {
     cout << pathStr <<"'s type is \""<< strFileType << "\" and takes up "<<fileSize<<" bytes"<<endl;
 }
 
+
+
 ChmodCommand::ChmodCommand(const char *cmd_line) : BuiltInCommand(cmd_line) {
 
 }
@@ -927,11 +931,6 @@ void ChmodCommand::execute() {
 
     char *arguments[COMMAND_MAX_ARGS];
     int numberOfWords = _parseCommandLine(cmd_line, arguments);
-
-
-
-
-
 
     if (arguments[last_arg_index + 1] != NULL){
         cerr << "smash error: chmod: invalid arguments" << endl;

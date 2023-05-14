@@ -12,6 +12,8 @@
 #include "Commands.h"
 #include <stdio.h>
 #include <errno.h>
+#include <sys/stat.h>
+#define SYSCALL_FAILED -1
 
 
 using namespace std;
@@ -318,7 +320,4 @@ void KillCommand::execute() {
     kill(pid, signum);
     cout <<"signal number " << signum << " was sent to pid " << pid << endl;
 }
-
-
-
 
